@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Games Generator - Entertain Kids on the Go!</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌍 Travel Games Generator</h1>
+            <p class="tagline">Create fun, educational activities for kids based on age and destination!</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <div class="form-group">
+                    <label for="ageGroup">Select Age Group:</label>
+                    <select id="ageGroup" class="form-control">
+                        <option value="">Choose an age range...</option>
+                        <option value="2-4">Ages 2-4 (Toddlers/Preschool)</option>
+                        <option value="4-8">Ages 4-8 (Early Elementary)</option>
+                        <option value="9-12">Ages 9-12 (Tweens)</option>
+                        <option value="13+">Ages 13+ (Teens)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="destination">Destination:</label>
+                    <input type="text" id="destination" class="form-control" placeholder="e.g., Paris, Disney World, Beach, Mountains">
+                </div>
+
+                <div class="form-group">
+                    <label for="tripType">Trip Type:</label>
+                    <select id="tripType" class="form-control">
+                        <option value="city">City/Urban</option>
+                        <option value="beach">Beach</option>
+                        <option value="mountains">Mountains</option>
+                        <option value="theme-park">Theme Park</option>
+                        <option value="road-trip">Road Trip</option>
+                        <option value="international">International Travel</option>
+                    </select>
+                </div>
+
+                <button id="generateBtn" class="btn-primary">Generate Games!</button>
+            </section>
+
+            <section id="gameSelection" class="game-selection hidden">
+                <h2>Available Games for <span id="selectedAge"></span></h2>
+                <div id="gamesList" class="games-grid"></div>
+            </section>
+
+            <section id="gameOutput" class="game-output hidden">
+                <div class="output-header">
+                    <h2 id="gameTitle"></h2>
+                    <button id="printBtn" class="btn-secondary">Print</button>
+                    <button id="newGameBtn" class="btn-secondary">Generate Another</button>
+                </div>
+                <div id="gameContent" class="game-content"></div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Made with ❤️ for traveling families | © 2026</p>
+        </footer>
+    </div>
+
+    <script src="js/gameGenerators.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
