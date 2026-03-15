@@ -34,6 +34,7 @@ const app = {
         document.getElementById('selectedAge').textContent = this.ageGroup;
         
         const games = this.getGamesForAge(this.ageGroup);
+        const self = this; // Store reference to app object
         
         games.forEach(game => {
             const card = document.createElement('div');
@@ -43,7 +44,10 @@ const app = {
                 <h3>${game.name}</h3>
                 <p>${game.description}</p>
             `;
-            card.addEventListener('click', () => this.generateGame(game.id));
+            card.onclick = function() {
+                console.log('Game card clicked:', game.id);
+                self.generateGame(game.id);
+            };
             gamesList.appendChild(card);
         });
         
@@ -62,8 +66,7 @@ const app = {
                 { id: 'bingo', name: 'Travel Bingo', icon: '🎯', description: 'Spot items on your trip' },
                 { id: 'guess-in-10', name: 'Guess in 10', icon: '❓', description: 'Riddle game' },
                 { id: 'pictionary', name: 'Pictionary List', icon: '✏️', description: 'Drawing game words' },
-                { id: 'comic-creation', name: 'Comic Creation', icon: '�', description: '3 templates: Blank, Starters, Storyboard' },
-                { id: 'itinerary', name: 'Kids Itinerary', icon: '📅', description: 'Your daily plan' },
+                { id: 'comic-creation', name: 'Comic Creation', icon: '�', description: '3 templates: Blank, Starters, Storyboard' },                { id: 'reading-story-book', name: 'Reading Story Book', icon: '📚', description: 'Choose your reading level story' },                { id: 'itinerary', name: 'Kids Itinerary', icon: '📅', description: 'Your daily plan' },
                 { id: 'feelings-chart', name: 'Feelings Detective', icon: '🕵️', description: 'Understand & manage emotions' },
                 { id: 'gratitude-journal', name: 'Gratitude Journal', icon: '🙏', description: 'What are you thankful for?' }
             ],
@@ -89,9 +92,18 @@ const app = {
     },
     
     generateGame(gameId) {
+        console.log('generateGame called with:', gameId);
+        console.log('Current destination:', this.destination);
+        console.log('Current tripType:', this.tripType);
+        
         const gameTitle = document.getElementById('gameTitle');
         const gameContent = document.getElementById('gameContent');
         const gameOutput = document.getElementById('gameOutput');
+        
+        if (!gameTitle || !gameContent || !gameOutput) {
+            console.error('Missing DOM elements');
+            return;
+        }
         
         let content = '';
         let title = '';
@@ -128,6 +140,10 @@ const app = {
             case 'comic-creation':
                 title = 'Create Your Travel Comic';
                 content = GameGenerators.generateComicSheet(this.destination);
+                break;
+            case 'reading-story-book':
+                title = `${this.destination} Reading Adventure`;
+                content = GameGenerators.generateReadingStoryBook(this.destination, this.tripType);
                 break;
             case 'itinerary':
                 title = `My ${this.destination} Adventure`;

@@ -129,6 +129,9 @@ label {
     cursor: pointer;
     transition: all 0.3s;
     text-align: center;
+    position: relative;
+    z-index: 1;
+    user-select: none;
 }
 
 .game-card:hover {
@@ -140,16 +143,19 @@ label {
 .game-card .icon {
     font-size: 3em;
     margin-bottom: 10px;
+    pointer-events: none;
 }
 
 .game-card h3 {
     color: #333;
     margin-bottom: 8px;
+    pointer-events: none;
 }
 
 .game-card p {
     color: #666;
     font-size: 0.9em;
+    pointer-events: none;
 }
 
 .output-header {

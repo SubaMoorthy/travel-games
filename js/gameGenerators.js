@@ -3,39 +3,250 @@ const GameGenerators = {
     
     // Ages 2-4 Games
     generateStoryBook(destination, tripType) {
+        const createStoryPage = (text, emoji) => `
+            <div style="page-break-after: always; padding: 30px; background: white; border: 3px solid #667eea; border-radius: 15px; margin-bottom: 20px; min-height: 400px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <div style="font-size: 120px; margin-bottom: 20px; text-align: center;">${emoji}</div>
+                <p style="font-size: 1.8em; text-align: center; line-height: 1.6; color: #333; font-weight: 500;">${text}</p>
+            </div>
+        `;
+        
         const stories = {
-            city: `<div class="story-page">
-                <div class="story-content">
-                    <p>Once upon a time, I went to <span class="story-blank">${destination}</span>.</p>
-                    <p>I saw tall <span class="story-blank">___________</span> everywhere!</p>
-                    <p>I met a friendly <span class="story-blank">___________</span>.</p>
-                    <p>For lunch, I ate yummy <span class="story-blank">___________</span>.</p>
-                    <p>My favorite part was <span class="story-blank">___________</span>.</p>
-                    <p>I felt so <span class="story-blank">___________</span>!</p>
-                    <p>The end! ❤️</p>
-                </div>
-                <div style="margin-top: 30px; border: 2px dashed #ccc; padding: 20px; text-align: center;">
-                    <p><strong>Draw your favorite part of the trip here:</strong></p>
-                    <div style="height: 200px; background: white;"></div>
-                </div>
-            </div>`,
-            beach: `<div class="story-page">
-                <div class="story-content">
-                    <p>I went to the beach at <span class="story-blank">${destination}</span>!</p>
-                    <p>The sand felt <span class="story-blank">___________</span>.</p>
-                    <p>I found <span class="story-blank">___________</span> seashells.</p>
-                    <p>The water was <span class="story-blank">___________</span>.</p>
-                    <p>I built a <span class="story-blank">___________</span> sandcastle.</p>
-                    <p>I played with <span class="story-blank">___________</span>.</p>
-                    <p>What a fun day! 🏖️</p>
-                </div>
-                <div style="margin-top: 30px; border: 2px dashed #ccc; padding: 20px; text-align: center;">
-                    <p><strong>Draw what you saw at the beach:</strong></p>
-                    <div style="height: 200px; background: white;"></div>
-                </div>
-            </div>`
+            city: [
+                { text: `My Big ${destination} Adventure!`, emoji: '🌆' },
+                { text: `I went on a trip to ${destination}.`, emoji: '✈️' },
+                { text: 'I saw tall buildings touching the sky!', emoji: '🏢' },
+                { text: 'Cars and buses went zoom, zoom, zoom!', emoji: '🚕' },
+                { text: 'I ate yummy food at a restaurant.', emoji: '🍕' },
+                { text: 'There were so many people everywhere!', emoji: '👨‍👩‍👧‍👦' },
+                { text: 'I heard city sounds - beep! beep!', emoji: '🚦' },
+                { text: 'At night, the lights were so bright!', emoji: '✨' },
+                { text: 'I had the best day ever!', emoji: '😊' },
+                { text: 'The End! ❤️', emoji: '🌟' }
+            ],
+            beach: [
+                { text: `My ${destination} Beach Day!`, emoji: '🏖️' },
+                { text: `I went to the beach at ${destination}.`, emoji: '🌊' },
+                { text: 'The sand was warm and soft!', emoji: '🏝️' },
+                { text: 'I found pretty seashells.', emoji: '🐚' },
+                { text: 'The water went splash, splash, splash!', emoji: '💦' },
+                { text: 'I built a big sandcastle!', emoji: '🏰' },
+                { text: 'Seagulls flew in the sky!', emoji: '🕊️' },
+                { text: 'The sun was warm and bright!', emoji: '☀️' },
+                { text: 'I love the beach so much!', emoji: '😃' },
+                { text: 'The End! ❤️', emoji: '🌟' }
+            ],
+            mountains: [
+                { text: `My ${destination} Mountain Adventure!`, emoji: '🏔️' },
+                { text: `I went to the mountains at ${destination}.`, emoji: '⛰️' },
+                { text: 'The mountains were so tall!', emoji: '🗻' },
+                { text: 'I saw tall pine trees everywhere!', emoji: '🌲' },
+                { text: 'Little birds sang tweet, tweet!', emoji: '🐦' },
+                { text: 'I found a babbling brook!', emoji: '💧' },
+                { text: 'A deer peeked out to say hello!', emoji: '🦌' },
+                { text: 'The air smelled so fresh and clean!', emoji: '🍃' },
+                { text: 'Mountains are magical!', emoji: '✨' },
+                { text: 'The End! ❤️', emoji: '🌟' }
+            ],
+            'theme-park': [
+                { text: `My ${destination} Fun Day!`, emoji: '🎢' },
+                { text: `I went to ${destination} today!`, emoji: '🎉' },
+                { text: 'There were rides that go round and round!', emoji: '🎠' },
+                { text: 'I saw colorful balloons everywhere!', emoji: '🎈' },
+                { text: 'I ate sweet cotton candy!', emoji: '🍭' },
+                { text: 'There was happy music playing!', emoji: '🎵' },
+                { text: 'I met fun characters!', emoji: '🤡' },
+                { text: 'Everything was so exciting!', emoji: '🎪' },
+                { text: 'Best day ever!', emoji: '🎊' },
+                { text: 'The End! ❤️', emoji: '🌟' }
+            ],
+            'road-trip': [
+                { text: `My ${destination} Road Trip!`, emoji: '🚗' },
+                { text: `We drove in the car to ${destination}.`, emoji: '🛣️' },
+                { text: 'I looked out the window!', emoji: '🪟' },
+                { text: 'I saw cows in the fields! Moo!', emoji: '🐄' },
+                { text: 'Big trucks went rumble, rumble!', emoji: '🚚' },
+                { text: 'We stopped for snacks!', emoji: '🍪' },
+                { text: 'The sun followed us all day!', emoji: '☀️' },
+                { text: 'We sang songs in the car!', emoji: '🎶' },
+                { text: 'Road trips are so fun!', emoji: '😄' },
+                { text: 'The End! ❤️', emoji: '🌟' }
+            ],
+            international: [
+                { text: `My Trip to ${destination}!`, emoji: '✈️' },
+                { text: `I went on an airplane to ${destination}!`, emoji: '🛫' },
+                { text: 'Everything looked different!', emoji: '🌍' },
+                { text: 'I heard new words!', emoji: '🗣️' },
+                { text: 'I tried new yummy food!', emoji: '🍜' },
+                { text: 'I saw interesting buildings!', emoji: '🏛️' },
+                { text: 'The people were so nice!', emoji: '👋' },
+                { text: 'I learned so many new things!', emoji: '📚' },
+                { text: 'The world is amazing!', emoji: '🌈' },
+                { text: 'The End! ❤️', emoji: '🌟' }
+            ]
         };
-        return stories[tripType] || stories.city;
+        
+        const selectedStory = stories[tripType] || stories.city;
+        
+        return `
+            <div style="padding: 20px;">
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 15px; text-align: center; margin-bottom: 30px;">
+                    <h2 style="margin: 0; font-size: 2em;">📖 Story Time!</h2>
+                    <p style="margin: 10px 0 0 0; font-size: 1.2em; opacity: 0.9;">A picture book about your ${destination} adventure</p>
+                </div>
+                
+                ${selectedStory.map(page => createStoryPage(page.text, page.emoji)).join('')}
+                
+                <div style="page-break-after: always; padding: 30px; background: #fff9e6; border: 3px dashed #ffd700; border-radius: 15px; margin-top: 20px;">
+                    <h3 style="text-align: center; color: #f57c00; margin-bottom: 20px;">🎨 Your Turn to Draw!</h3>
+                    <p style="text-align: center; font-size: 1.2em; margin-bottom: 20px;">Draw your favorite part of the story!</p>
+                    <div style="height: 400px; background: white; border: 3px solid #ffd700; border-radius: 10px; margin: 20px;"></div>
+                </div>
+                
+                <div style="margin-top: 30px; padding: 20px; background: #e8f5e9; border-radius: 10px; text-align: center;">
+                    <p style="font-size: 1.1em;">🌟 Great job reading! You can read this story again and again! 🌟</p>
+                </div>
+            </div>
+        `;
+    },
+    
+    // Ages 4-8 Reading Story Book
+    generateReadingStoryBook(destination, tripType) {
+        // This function will prompt for reading level and generate appropriate story
+        return `
+            <div style="padding: 20px;">
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 15px; text-align: center; margin-bottom: 30px;">
+                    <h2 style="margin: 0; font-size: 2em;">📚 My ${destination} Reading Adventure</h2>
+                    <p style="margin: 10px 0 0 0; font-size: 1.1em; opacity: 0.9;">A story book just for you!</p>
+                </div>
+                
+                <div style="background: #fff9e6; padding: 25px; border-radius: 10px; margin-bottom: 30px; border-left: 5px solid #ffd700;">
+                    <h3 style="margin: 0 0 15px 0; color: #f57c00;">📖 Choose Your Reading Level:</h3>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;">
+                        <button onclick="showStory('beginner', '${destination}', '${tripType}')" style="padding: 15px 25px; background: #4caf50; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: bold;">🌱 Beginner Reader</button>
+                        <button onclick="showStory('intermediate', '${destination}', '${tripType}')" style="padding: 15px 25px; background: #2196f3; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: bold;">📗 Intermediate Reader</button>
+                        <button onclick="showStory('advanced', '${destination}', '${tripType}')" style="padding: 15px 25px; background: #9c27b0; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: bold;">🌟 Advanced Reader</button>
+                    </div>
+                    <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 8px;">
+                        <p style="margin: 0; font-size: 0.95em; color: #666;"><strong>Tip:</strong></p>
+                        <p style="margin: 5px 0; font-size: 0.9em;">• <strong>Beginner:</strong> Short sentences, simple words (Ages 4-5)</p>
+                        <p style="margin: 5px 0; font-size: 0.9em;">• <strong>Intermediate:</strong> Longer sentences, more vocabulary (Ages 6-7)</p>
+                        <p style="margin: 5px 0; font-size: 0.9em;">• <strong>Advanced:</strong> Chapter-style, descriptive (Ages 7-8)</p>
+                    </div>
+                </div>
+                
+                <div id="storyContent" style="min-height: 200px;"></div>
+            </div>
+            
+            <script>
+            function showStory(level, destination, tripType) {
+                const stories = {
+                    beginner: generateBeginnerStory(destination, tripType),
+                    intermediate: generateIntermediateStory(destination, tripType),
+                    advanced: generateAdvancedStory(destination, tripType)
+                };
+                document.getElementById('storyContent').innerHTML = stories[level];
+                document.getElementById('storyContent').scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            function generateBeginnerStory(dest, type) {
+                const beginnerStories = {
+                    city: [
+                        { ch: 1, title: 'We Go!', text: 'Today we go to ' + dest + '.\nI am so happy!\nMom packs my bag.\nDad gets the car.', emoji: '🚗' },
+                        { ch: 2, title: 'We Are Here!', text: 'We are in ' + dest + '!\nI see big buildings.\nThey are very tall.\nWow!', emoji: '🏢' },
+                        { ch: 3, title: 'So Many Cars!', text: 'I see many cars.\nBeep! Beep!\nThe cars go fast.\nRed, blue, yellow cars!', emoji: '🚕' },
+                        { ch: 4, title: 'Yummy Food!', text: 'We eat lunch.\nThe food is yummy!\nI eat it all up.\nMy tummy is happy!', emoji: '🍕' },
+                        { ch: 5, title: 'Fun Time!', text: 'We walk and walk.\nI see new things!\nThis is so fun!\nI like ' + dest + '!', emoji: '🎉' },
+                        { ch: 6, title: 'Bed Time', text: 'Now it is night.\nI am sleepy.\nI had the best day!\nGood night!', emoji: '😴' }
+                    ],
+                    beach: [
+                        { ch: 1, title: 'Beach Day!', text: 'We go to the beach!\nI bring my bucket.\nI bring my shovel.\nLet\'s go!', emoji: '🏖️' },
+                        { ch: 2, title: 'Sand!', text: 'The sand is soft.\nIt feels nice.\nI dig and dig.\nI make a big hole!', emoji: '🏝️' },
+                        { ch: 3, title: 'Water Fun', text: 'The water is cool!\nSplash! Splash!\nThe waves are big.\nThis is fun!', emoji: '🌊' },
+                        { ch: 4, title: 'Sandcastle', text: 'I build a castle.\nIt is very tall!\nI put shells on top.\nLook at my castle!', emoji: '🏰' },
+                        { ch: 5, title: 'Birds!', text: 'I see birds flying.\nThey say "CAW! CAW!"\nThey want my snack!\nSilly birds!', emoji: '🕊️' },
+                        { ch: 6, title: 'Best Day', text: 'I love the beach!\nI am happy.\nI want to come back!\nThe End!', emoji: '😊' }
+                    ]
+                };
+                const story = (beginnerStories[type] || beginnerStories.city);
+                return story.map(page => `
+                    <div style="page-break-after: always; padding: 30px; background: white; border: 3px solid #4caf50; border-radius: 15px; margin-bottom: 20px;">
+                        <div style="background: #4caf50; color: white; padding: 10px 20px; border-radius: 8px; display: inline-block; margin-bottom: 20px;">
+                            <strong>Chapter ${page.ch}: ${page.title}</strong>
+                        </div>
+                        <div style="font-size: 100px; text-align: center; margin: 20px 0;">${page.emoji}</div>
+                        <p style="font-size: 1.6em; line-height: 2; text-align: center; color: #333; white-space: pre-line;">${page.text}</p>
+                    </div>
+                `).join('') + '<div style="margin-top: 30px; padding: 25px; background: #e8f5e9; border-radius: 10px; text-align: center;"><p style="font-size: 1.3em; margin: 0;">🌟 You did it! You read the whole book! 🌟</p></div>';
+            }
+            
+            function generateIntermediateStory(dest, type) {
+                const intermediateStories = {
+                    city: [
+                        { ch: 1, title: 'The Journey Begins', text: 'Emma was excited! Today she was going to visit ' + dest + ' with her family. She had never been to such a big city before. She packed her favorite stuffed bear and her camera. "I\'m going to take so many pictures!" she said.', emoji: '📸' },
+                        { ch: 2, title: 'Amazing Buildings', text: 'When Emma arrived, she couldn\'t believe her eyes. The buildings were taller than she ever imagined! Some had glass windows that sparkled in the sun. "Those buildings touch the clouds!" Emma told her mom. She took her first picture.', emoji: '🏙️' },
+                        { ch: 3, title: 'City Sounds', text: 'The city was loud and busy. Cars honked their horns. People talked and laughed. Music played from open windows. Emma had never heard so many sounds at once! It was different from her quiet town, but she liked it.', emoji: '🔊' },
+                        { ch: 4, title: 'New Friends', text: 'At the park, Emma met a girl named Maya who lived in ' + dest + '. Maya showed Emma her favorite spot by the fountain. They fed the birds together. "You can visit me every time you come here!" Maya said with a smile.', emoji: '👭' },
+                        { ch: 5, title: 'Special Lunch', text: 'For lunch, Emma tried food she had never eaten before. Her dad helped her read the menu. She chose something new and brave. When it arrived, it looked strange, but it smelled wonderful. She took a bite. "Delicious!" she exclaimed.', emoji: '🍜' },
+                        { ch: 6, title: 'Night Lights', text: 'As the sun set, something magical happened. Lights turned on all over the city! Buildings glowed. Street lamps twinkled. Emma watched from her hotel window. "  ' + dest + ' is beautiful at night," she whispered.', emoji: '✨' },
+                        { ch: 7, title: 'Going Home', text: 'The next day, it was time to go home. Emma felt sad to leave but happy about her adventure. She had so many photos and memories. "Can we come back soon?" she asked. Her parents smiled and said, "Of course!" The End.', emoji: '🏡' }
+                    ],
+                    beach: [
+                        { ch: 1, title: 'Beach Vacation!', text: 'Liam had been waiting all year for this trip to the beach at ' + dest + '. He loved the ocean more than anything. The car ride seemed to take forever! Finally, he saw a sign: "Beach - 1 Mile." His heart started beating fast with excitement.', emoji: '🎊' },
+                        { ch: 2, title: 'First View', text: 'When Liam saw the ocean, he stopped and stared. The water went on forever! It was bluer than the sky. White waves rolled onto the sand. Seagulls flew overhead. "It\'s more amazing than I remembered!" he shouted.', emoji: '🌊' },
+                        { ch: 3, title: 'Shell Hunt', text: 'Liam walked along the beach, looking for shells. He found spiral ones, pink ones, and even a perfect sand dollar! Each shell was like a tiny treasure. He filled his bucket carefully. These would be perfect memories to take home.', emoji: '🐚' },
+                        { ch: 4, title: 'Sandcastle Contest', text: 'Liam entered a sandcastle building contest. He worked hard, patting sand and carving towers. He added a moat and a bridge. Other kids built castles too. When the judges came, Liam won a ribbon for "Most Creative!" He was so proud.', emoji: '🏆' },
+                        { ch: 5, title: 'Ocean Swimming', text: 'The water felt cold at first, but soon Liam got used to it. He jumped over waves and floated on his back. A small fish swam by his feet! The ocean was full of life and wonder. He could swim here all day.', emoji: '🏊' },
+                        { ch: 6, title: 'Sunset Magic', text: 'That evening, Liam\'s family watched the sunset from the beach. The sky turned orange, pink, and purple. The sun looked like a giant orange ball sinking into the water. "This is the most beautiful thing I\'ve ever seen," Liam said.', emoji: '🌅' },
+                        { ch: 7, title: 'Beach Memories', text: 'On the last day, Liam took one more walk on the beach. He wanted to remember everything - the sound of waves, the feeling of sand, the salty smell. He knew he would come back to ' + dest + ' again someday. The End.', emoji: '💭' }
+                    ]
+                };
+                const story = (intermediateStories[type] || intermediateStories.city);
+                return story.map(page => `
+                    <div style="page-break-after: always; padding: 30px; background: white; border: 3px solid #2196f3; border-radius: 15px; margin-bottom: 20px;">
+                        <div style="background: #2196f3; color: white; padding: 12px 24px; border-radius: 8px; display: inline-block; margin-bottom: 20px;">
+                            <strong style="font-size: 1.2em;">Chapter ${page.ch}: ${page.title}</strong>
+                        </div>
+                        <div style="font-size: 80px; text-align: center; margin: 20px 0;">${page.emoji}</div>
+                        <p style="font-size: 1.3em; line-height: 1.8; color: #333; text-align: justify; text-indent: 30px;">${page.text}</p>
+                    </div>
+                `).join('') + '<div style="margin-top: 30px; padding: 25px; background: #e3f2fd; border-radius: 10px; text-align: center;"><p style="font-size: 1.3em; margin: 0;">📚 Excellent reading! You finished a chapter book! 📚</p></div>';
+            }
+            
+            function generateAdvancedStory(dest, type) {
+                const advancedStories = {
+                    city: [
+                        { ch: 1, title: 'An Unexpected Adventure', text: 'Sophia had always lived in a small town where everyone knew everyone. So when her parents announced they were spending a week in ' + dest + ', she felt both nervous and thrilled. She spent the night before packing and repacking her suitcase, wondering what adventures awaited her in the bustling city.', emoji: '🎒' },
+                        { ch: 2, title: 'First Impressions', text: 'The moment Sophia stepped out of the train station, she was overwhelmed. Towers of glass and steel reached toward the clouds. Hundreds of people rushed past, each with their own destination. Street vendors called out, offering everything from hot pretzels to colorful scarves. The energy was electric, and Sophia felt her nervousness melt into curiosity.', emoji: '🌆' },
+                        { ch: 3, title: 'Getting Lost... and Found', text: 'On the second day, something unexpected happened. While her parents were busy at a museum gift shop, Sophia wandered down a colorful alley filled with street art. When she turned around, she couldn\'t find her way back! Her heart pounded. Then she remembered her dad\'s advice: "Stay calm and ask for help." A friendly shopkeeper pointed her in the right direction, and soon she was reunited with her relieved parents.', emoji: '🗺️' },
+                        { ch: 4, title: 'A World of Flavors', text: 'That evening, Sophia\'s family ate at a restaurant unlike any in her hometown. The menu featured foods from around the world. Sophia decided to be brave. She ordered something she couldn\'t even pronounce! When it arrived, the dish was colorful and aromatic. Taking her first bite, she discovered flavors she never knew existed - sweet, spicy, and savory all at once. "This is amazing!" she declared, already planning what to try next.', emoji: '🍽️' },
+                        { ch: 5, title: 'The View from Above', text: 'Sophia\'s favorite moment came when they visited the observation deck of the tallest building in ' + dest + '. The elevator ride made her ears pop. When the doors opened, she gasped. The entire city spread below like a toy village. She could see parks, rivers, and roads stretching to the horizon. From up here, the busy city seemed peaceful. She felt like she was on top of the world.', emoji: '🏙️' },
+                        { ch: 6, title: 'Making Connections', text: 'In the park, Sophia joined a group of kids playing soccer. At first, she felt shy, but soon she was laughing and running with her new friends. They came from all over the world - Japan, Brazil, Egypt, and more. Even though they spoke with different accents and had different customs, they all understood the language of play and friendship. Sophia exchanged contact information with a girl named Keiko, promising to stay in touch.', emoji: '⚽' },
+                        { ch: 7, title: 'Changed Forever', text: 'On the train ride home, Sophia pressed her face against the window, watching ' + dest + ' disappear in the distance. She thought about everything she\'d experienced - the sights, sounds, tastes, and people. She realized that the world was much bigger and more wonderful than she\'d imagined. But most importantly, she\'d discovered something about herself: she was braver and more adventurous than she\'d ever known. This trip hadn\'t just shown her a new city; it had shown her new possibilities for her own life. The End.', emoji: '🌟' }
+                    ],
+                    beach: [
+                        { ch: 1, title: 'The Letter', text: 'Marcus found the message in a bottle on his first morning at ' + dest + ' beach. The bottle was old, covered in barnacles, and sealed with wax. Inside was a hand-drawn map with strange symbols and a riddle: "Where land meets sea, beneath the crooked tree, a treasure waits for thee." Marcus\'s heart raced. A real treasure map! He had to find out if it was genuine.', emoji: '📜' },
+                        { ch: 2, title: 'The Investigation Begins', text: 'Marcus studied the map carefully. It showed distinctive rock formations and landmarks along the beach. He recognized some of them from his morning walk! Armed with the map, his notebook, and his determination, he set out on his treasure hunt. The hot sand burned his feet, but Marcus barely noticed. Adventure was calling.', emoji: '🔍' },
+                        { ch: 3, title: 'Unexpected Allies', text: 'At the tidal pools, Marcus met twins named Zoe and Max who were studying sea creatures for a school project. When they saw his map, their eyes lit up. "We know this beach better than anyone," Zoe said. "We can help!" The three of them formed a team. Max had a metal detector, Zoe knew all the hidden paths, and Marcus had the map. Together, they were unstoppable.', emoji: '👫' },
+                        { ch: 4, title: 'False Leads and Persistence', text: 'Their first three attempts led nowhere. The "crooked tree" in the map could have been any of dozens of palm trees bent by the wind. They dug in several spots, finding only broken shells and driftwood. As the sun climbed higher and the day grew hotter, Max wanted to give up. But Marcus convinced them to try one more location - an old tree near the northern cliffs that he\'d seen earlier.', emoji: '🌴' },
+                        { ch: 5, title: 'The Discovery', text: 'Max\'s metal detector beeped frantically near the tree\'s roots. The three friends dug carefully, their hands trembling with excitement. Six inches down, they hit something hard. It was a metal box, rusty but intact! Inside, they found old coins, a weathered journal, and photographs from fifty years ago. The "treasure" wasn\'t valuable in money, but it was priceless in history - it was a time capsule left by a child their age decades ago!', emoji: '💎' },
+                        { ch: 6, title: 'Sharing the Story', text: 'The local newspaper wanted to write about their discovery! The museum asked if they would donate the time capsule so everyone could learn about life at ' + dest + ' beach in the past. Marcus, Zoe, and Max agreed, proud that their adventure would teach others. The child who had buried the capsule - now a grandmother - even came to meet them, tears in her eyes, amazed her childhood treasure had been found.', emoji: '📰' },
+                        { ch: 7, title: 'The Real Treasure', text: 'As the week ended, Marcus realized the real treasure wasn\'t what they\'d found in the box. It was the adventure itself, the problem-solving, and the friendship he\'d formed with Zoe and Max. They\'d promised to meet at the same beach every summer. Looking out at the ocean one last time, Marcus smiled. He\'d come to the beach expecting a simple vacation. Instead, he\'d found a mystery, solved it with friends, and created memories that would last forever. Some treasures, he now knew, couldn\'t be held in your hands - they had to be held in your heart. The End.', emoji: '❤️' }
+                    ]
+                };
+                const story = (advancedStories[type] || advancedStories.city);
+                return story.map(page => `
+                    <div style="page-break-after: always; padding: 35px; background: white; border: 3px solid #9c27b0; border-radius: 15px; margin-bottom: 20px;">
+                        <div style="background: #9c27b0; color: white; padding: 14px 28px; border-radius: 8px; display: inline-block; margin-bottom: 20px;">
+                            <strong style="font-size: 1.3em;">Chapter ${page.ch}</strong>
+                        </div>
+                        <h3 style="color: #9c27b0; margin: 15px 0; font-size: 1.6em;">${page.title}</h3>
+                        <div style="font-size: 60px; text-align: center; margin: 20px 0;">${page.emoji}</div>
+                        <p style="font-size: 1.2em; line-height: 1.9; color: #333; text-align: justify; text-indent: 40px;">${page.text}</p>
+                    </div>
+                `).join('') + '<div style="margin-top: 30px; padding: 25px; background: #f3e5f5; border-radius: 10px; text-align: center;"><h3 style="color: #9c27b0; margin: 0 0 10px 0;">🎉 Congratulations! 🎉</h3><p style="font-size: 1.2em; margin: 0;">You completed an advanced chapter book! You\'re an amazing reader!</p></div>';
+            }
+            </script>
+        `;
     },
     
     generateSearchFind(destination, tripType) {
