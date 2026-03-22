@@ -2,7 +2,25 @@
 const GameGenerators = {
     
     // Ages 2-4 Games
-    generateStoryBook(destination, tripType) {
+    async generateStoryBook(destination) {
+        // Show loading indicator
+        const loadingHtml = `
+            <div style="padding: 40px; text-align: center;">
+                <div style="font-size: 60px; margin-bottom: 20px;">📚</div>
+                <h3>Creating your personalized ${destination} story...</h3>
+                <p style="margin-top: 20px; color: #666;">Gathering interesting facts from Wikipedia and NPS...</p>
+                <div style="margin-top: 20px; font-size: 30px;">⏳</div>
+            </div>
+        `;
+        
+        // Fetch dynamic content
+        let content;
+        try {
+            content = await ContentFetcher.fetchDestinationContent(destination);
+        } catch (error) {
+            console.error('Error fetching content:', error);
+            content = ContentFetcher.getFallbackContent(destination);
+        }
         const createStoryPage = (text, emoji) => `
             <div style="page-break-after: always; padding: 30px; background: white; border: 3px solid #667eea; border-radius: 15px; margin-bottom: 20px; min-height: 400px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
                 <div style="font-size: 120px; margin-bottom: 20px; text-align: center;">${emoji}</div>
@@ -10,91 +28,156 @@ const GameGenerators = {
             </div>
         `;
         
-        const stories = {
-            city: [
-                { text: `My Big ${destination} Adventure!`, emoji: '🌆' },
-                { text: `I went on a trip to ${destination}.`, emoji: '✈️' },
-                { text: 'I saw tall buildings touching the sky!', emoji: '🏢' },
-                { text: 'Cars and buses went zoom, zoom, zoom!', emoji: '🚕' },
-                { text: 'I ate yummy food at a restaurant.', emoji: '🍕' },
-                { text: 'There were so many people everywhere!', emoji: '👨‍👩‍👧‍👦' },
-                { text: 'I heard city sounds - beep! beep!', emoji: '🚦' },
-                { text: 'At night, the lights were so bright!', emoji: '✨' },
-                { text: 'I had the best day ever!', emoji: '😊' },
-                { text: 'The End! ❤️', emoji: '🌟' }
-            ],
-            beach: [
-                { text: `My ${destination} Beach Day!`, emoji: '🏖️' },
-                { text: `I went to the beach at ${destination}.`, emoji: '🌊' },
-                { text: 'The sand was warm and soft!', emoji: '🏝️' },
-                { text: 'I found pretty seashells.', emoji: '🐚' },
-                { text: 'The water went splash, splash, splash!', emoji: '💦' },
-                { text: 'I built a big sandcastle!', emoji: '🏰' },
-                { text: 'Seagulls flew in the sky!', emoji: '🕊️' },
-                { text: 'The sun was warm and bright!', emoji: '☀️' },
-                { text: 'I love the beach so much!', emoji: '😃' },
-                { text: 'The End! ❤️', emoji: '🌟' }
-            ],
-            mountains: [
-                { text: `My ${destination} Mountain Adventure!`, emoji: '🏔️' },
-                { text: `I went to the mountains at ${destination}.`, emoji: '⛰️' },
-                { text: 'The mountains were so tall!', emoji: '🗻' },
-                { text: 'I saw tall pine trees everywhere!', emoji: '🌲' },
-                { text: 'Little birds sang tweet, tweet!', emoji: '🐦' },
-                { text: 'I found a babbling brook!', emoji: '💧' },
-                { text: 'A deer peeked out to say hello!', emoji: '🦌' },
-                { text: 'The air smelled so fresh and clean!', emoji: '🍃' },
-                { text: 'Mountains are magical!', emoji: '✨' },
-                { text: 'The End! ❤️', emoji: '🌟' }
-            ],
-            'theme-park': [
-                { text: `My ${destination} Fun Day!`, emoji: '🎢' },
-                { text: `I went to ${destination} today!`, emoji: '🎉' },
-                { text: 'There were rides that go round and round!', emoji: '🎠' },
-                { text: 'I saw colorful balloons everywhere!', emoji: '🎈' },
-                { text: 'I ate sweet cotton candy!', emoji: '🍭' },
-                { text: 'There was happy music playing!', emoji: '🎵' },
-                { text: 'I met fun characters!', emoji: '🤡' },
-                { text: 'Everything was so exciting!', emoji: '🎪' },
-                { text: 'Best day ever!', emoji: '🎊' },
-                { text: 'The End! ❤️', emoji: '🌟' }
-            ],
-            'road-trip': [
-                { text: `My ${destination} Road Trip!`, emoji: '🚗' },
-                { text: `We drove in the car to ${destination}.`, emoji: '🛣️' },
-                { text: 'I looked out the window!', emoji: '🪟' },
-                { text: 'I saw cows in the fields! Moo!', emoji: '🐄' },
-                { text: 'Big trucks went rumble, rumble!', emoji: '🚚' },
-                { text: 'We stopped for snacks!', emoji: '🍪' },
-                { text: 'The sun followed us all day!', emoji: '☀️' },
-                { text: 'We sang songs in the car!', emoji: '🎶' },
-                { text: 'Road trips are so fun!', emoji: '😄' },
-                { text: 'The End! ❤️', emoji: '🌟' }
-            ],
-            international: [
-                { text: `My Trip to ${destination}!`, emoji: '✈️' },
-                { text: `I went on an airplane to ${destination}!`, emoji: '🛫' },
-                { text: 'Everything looked different!', emoji: '🌍' },
-                { text: 'I heard new words!', emoji: '🗣️' },
-                { text: 'I tried new yummy food!', emoji: '🍜' },
-                { text: 'I saw interesting buildings!', emoji: '🏛️' },
-                { text: 'The people were so nice!', emoji: '👋' },
-                { text: 'I learned so many new things!', emoji: '📚' },
-                { text: 'The world is amazing!', emoji: '🌈' },
-                { text: 'The End! ❤️', emoji: '🌟' }
-            ]
+        // Helper to extract a kid-friendly detail
+        const getSpecialThing = () => {
+            if (content.landmarks && content.landmarks.length > 0) {
+                const landmark = content.landmarks[0].split(' - ')[0]; // Remove extra descriptions
+                return landmark.length < 40 ? landmark : 'something special';
+            }
+            return 'something special';
         };
         
-        const selectedStory = stories[tripType] || stories.city;
+        const getActivityName = () => {
+            if (content.activities && content.activities.length > 0) {
+                return content.activities[0].toLowerCase();
+            }
+            return 'exploring';
+        };
+        
+        // Analyze environment to determine what this place is REALLY like
+        const env = ContentFetcher.analyzeEnvironment(content);
+        console.log(`[Story] Environment analysis for ${destination}:`, env.characteristics);
+        
+        // Create contextually appropriate story based on actual environment
+        const stories = [];
+        const specialThing = getSpecialThing();
+        const activity = getActivityName();
+        
+        // Story arc - Keep it fun and simple!
+        stories.push({ text: `My Big ${destination} Adventure!`, emoji: '🌆' });
+        stories.push({ text: `Today I'm going somewhere exciting!\nCan you guess where?\n${destination}!`, emoji: '✈️' });
+        
+        // Generate contextually appropriate experiences based on ACTUAL environment
+        let environmentStories = [];
+        
+        if (env.isThemePark) {
+            // Theme park environment
+            environmentStories = [
+                { text: `${destination} is SO fun!\nRides everywhere!\n${specialThing !== 'something special' ? `I even saw ${specialThing}!` : 'I can\'t wait!'}`, emoji: '🎢' },
+                { text: 'Round and round!\nUp and down!\nWeee!', emoji: '🎠' },
+                { text: 'Cotton candy!\nSo pink and sweet!\nYum yum!', emoji: '🍭' },
+                { text: 'Music plays!\nI dance!\nBest day ever!', emoji: '🎵' },
+                { text: 'Characters wave!\nI wave back!\nSo exciting!', emoji: '🤡' }
+            ];
+        } else if (env.isDesert) {
+            // Desert-specific story
+            environmentStories = [
+                { text: `${destination} is so different!\nThe land is dry and vast.\n${specialThing !== 'something special' ? `I can see ${specialThing} far away!` : 'Sand and rocks everywhere!'}`, emoji: '🏜️' },
+                { text: 'It is SO HOT here!\nThe sun is very bright.\nI wear my hat and drink water!', emoji: '☀️' },
+                { text: `The ground looks special.\nRed rocks! Sandy dunes!\n${env.isVolcanic ? 'And valleys down below!' : 'Wide open spaces!'}`, emoji: '🗻' },
+                { text: 'Look! A lizard runs fast!\nAnimals here love the heat.\nThey are so cool!', emoji: '🦎' },
+                { text: 'At night it gets cold!\nThe stars are SO bright!\nI can see millions!', emoji: '✨' }
+            ];
+        } else if (env.isGeothermal) {
+            // Geothermal/hot springs environment (Yellowstone)
+            environmentStories = [
+                { text: `${destination} is bubbling!\nSteam comes from the ground!\n${specialThing !== 'something special' ? `Look at ${specialThing}!` : 'So magical!'}`, emoji: '💨' },
+                { text: 'I see hot springs!\nThe water is steamy.\nIt smells like sulfur!', emoji: '♨️' },
+                { text: 'The ground feels warm!\nColors everywhere - yellow, orange!\nNature is amazing!', emoji: '🌋' },
+                { text: 'Geysers shoot up HIGH!\nWoosh! Up it goes!\nThen it comes back down!', emoji: '💦' },
+                { text: 'This place is special!\nThe earth is alive here!\nSo incredible!', emoji: '🔥' }
+            ];
+        } else if (env.isGlacial) {
+            // Glacial/snow/ice environment (Mt. Rainier, Alaska)
+            environmentStories = [
+                { text: `${destination} is covered in snow!\nWhite everywhere!\n${specialThing !== 'something special' ? `I see ${specialThing}!` : 'So beautiful!'}`, emoji: '🏔️' },
+                { text: 'The mountain is SO tall!\nIt touches the clouds!\nI feel tiny!', emoji: '⛰️' },
+                { text: 'Ice and snow sparkle!\nGlaciers are huge!\nLike frozen rivers!', emoji: '❄️' },
+                { text: 'The air is cold!\nI bundle up warm!\nMy breath makes clouds!', emoji: '🧊' },
+                { text: 'This place is special!\nNature is so powerful!\nAmazing!', emoji: '✨' }
+            ];
+        } else if (env.isVolcanic) {
+            // Volcanic mountain without geothermal (dormant volcano)
+            environmentStories = [
+                { text: `${destination} is a huge mountain!\n${specialThing !== 'something special' ? `I can see ${specialThing}!` : 'It looks like a giant!'}`, emoji: '🌋' },
+                { text: 'This was a volcano!\nA long time ago!\nNow it sleeps!', emoji: '⛰️' },
+                { text: 'The peak is so high!\nClouds float below!\nSo amazing!', emoji: '☁️' },
+                { text: 'I see the crater!\nLike a big bowl on top!\nNature is powerful!', emoji: '🏔️' },
+                { text: 'This mountain is special!\nFormed by fire!\nSo cool!', emoji: '🔥' }
+            ];
+        } else if (env.isForest) {
+            // Forest environment
+            environmentStories = [
+                { text: `${destination} has GIANT trees!\nThey are so tall!\n${specialThing !== 'something special' ? `I saw ${specialThing} too!` : 'I feel tiny here!'}`, emoji: '🌲' },
+                { text: 'The forest smells so good!\nPine needles everywhere.\nFresh and clean!', emoji: '🌿' },
+                { text: 'Birds sing in the trees!\nTWEET TWEET!\nI try to find them!', emoji: '🐦' },
+                { text: 'Squirrels run up and down!\nThey gather acorns.\nSo busy and fast!', emoji: '🐿️' },
+                { text: 'The trees make shade!\nIt is cool and peaceful.\nI love the forest!', emoji: '🌳' }
+            ];
+        } else if (env.isCoastal) {
+            // Coastal environment
+            environmentStories = [
+                { text: `${destination} smells like salt!\nThe ocean is HUGE!\n${specialThing !== 'something special' ? `I can see ${specialThing}!` : 'Water everywhere!'}`, emoji: '🌊' },
+                { text: 'Waves go SPLASH!\nThey tickle my toes!\nSo cold and fun!', emoji: '💦' },
+                { text: 'I find seashells!\nPretty and shiny.\nThe ocean gave them to me!', emoji: '🐚' },
+                { text: 'Seagulls fly overhead!\nCAW CAW CAW!\nThey look for food!', emoji: '🕊️' },
+                { text: 'The sand is soft!\nI dig and dig.\nI make a big hole!', emoji: '🏖️' }
+            ];
+        } else if (env.isUrban) {
+            // City/urban environment
+            environmentStories = [
+                { text: `${destination} has tall buildings!\nThey touch the sky!\n${specialThing !== 'something special' ? `I even saw ${specialThing}!` : 'Everything looks amazing!'}`, emoji: '🏢' },
+                { text: 'Cars go BEEP BEEP!\nBuses go VROOM!\nSo many sounds!', emoji: '🚕' },
+                { text: 'So many people!\nThey walk fast.\nEveryone is busy!', emoji: '👨‍👩‍👧‍👦' },
+                { text: 'We eat yummy food!\nI try something new.\nIt is delicious!', emoji: '🍕' },
+                { text: 'At night, lights turn on!\nThe city sparkles!\nSo pretty!', emoji: '✨' }
+            ];
+        } else if (env.isMountain && !env.isDesert) {
+            // True mountain environment (not desert mountains)
+            environmentStories = [
+                { text: `${destination} has huge mountains!\nThey are SO tall!\n${specialThing !== 'something special' ? `I see ${specialThing}!` : 'They touch the clouds!'}`, emoji: '🏔️' },
+                { text: 'Pine trees everywhere!\nThey smell so good!\nNature is amazing!', emoji: '🌲' },
+                { text: 'Birds sing songs!\nTWEET TWEET!\nThe air is fresh!', emoji: '🐦' },
+                { text: 'I find a stream!\nThe water is cold.\nSplish splash!', emoji: '💧' },
+                { text: 'A deer says hello!\nIt looks at me.\nThen hops away!', emoji: '🦌' }
+            ];
+        } else {
+            // Generic natural environment based on trip type
+            const genericStories = {
+                'theme-park': [
+                    { text: `${destination} is SO fun!\nRides everywhere!\nI can't wait!`, emoji: '🎢' },
+                    { text: 'Round and round!\nUp and down!\nWeee!', emoji: '🎠' },
+                    { text: 'Cotton candy!\nSo pink and sweet!\nYum yum!', emoji: '🍭' },
+                    { text: 'Music plays!\nI dance!\nBest day ever!', emoji: '🎵' },
+                    { text: 'Characters wave!\nI wave back!\nSo exciting!', emoji: '🤡' }
+                ],
+                'road-trip': [
+                    { text: `The drive to ${destination} is long.\nBut fun!\nI look out the window!`, emoji: '🪟' },
+                    { text: 'Cows say MOO!\nTrucks say RUMBLE!\nSo much to see!', emoji: '🐄' },
+                    { text: 'We stop for snacks!\nI pick my favorite!\nYummy!', emoji: '🍪' },
+                    { text: 'We sing songs!\nLoud and silly!\nFamily time!', emoji: '🎶' },
+                    { text: 'We made it!\nTime to explore!\nYay!', emoji: '🎉' }
+                ]
+            };
+            // Use road-trip as default when no specific environment detected
+            environmentStories = genericStories['road-trip'];
+        }
+        
+        stories.push(...environmentStories);
+        
+        // Fun ending
+        stories.push({ text: `Time to go home.\nBut I'll never forget ${destination}!\nWhat an adventure!`, emoji: '😊' });
+        stories.push({ text: 'The End! ❤️\n(But maybe not forever...)', emoji: '🌟' });
         
         return `
             <div style="padding: 20px;">
                 <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 15px; text-align: center; margin-bottom: 30px;">
                     <h2 style="margin: 0; font-size: 2em;">📖 Story Time!</h2>
                     <p style="margin: 10px 0 0 0; font-size: 1.2em; opacity: 0.9;">A picture book about your ${destination} adventure</p>
+                    <p style="margin: 10px 0 0 0; font-size: 0.9em; opacity: 0.8;">✨ Powered by real facts from Wikipedia & NPS</p>
                 </div>
                 
-                ${selectedStory.map(page => createStoryPage(page.text, page.emoji)).join('')}
+                ${stories.map(page => createStoryPage(page.text, page.emoji)).join('')}
                 
                 <div style="page-break-after: always; padding: 30px; background: #fff9e6; border: 3px dashed #ffd700; border-radius: 15px; margin-top: 20px;">
                     <h3 style="text-align: center; color: #f57c00; margin-bottom: 20px;">🎨 Your Turn to Draw!</h3>
@@ -104,27 +187,37 @@ const GameGenerators = {
                 
                 <div style="margin-top: 30px; padding: 20px; background: #e8f5e9; border-radius: 10px; text-align: center;">
                     <p style="font-size: 1.1em;">🌟 Great job reading! You can read this story again and again! 🌟</p>
+                    ${content.facts.length > 0 ? `<p style="font-size: 0.9em; margin-top: 10px; color: #666;">This story includes real facts about ${destination}!</p>` : ''}
                 </div>
             </div>
         `;
     },
     
     // Ages 4-8 Reading Story Book
-    generateReadingStoryBook(destination, tripType) {
-        // This function will prompt for reading level and generate appropriate story
+    async generateReadingStoryBook(destination) {
+        // Fetch dynamic content first
+        let content;
+        try {
+            content = await ContentFetcher.fetchDestinationContent(destination);
+        } catch (error) {
+            console.error('Error fetching content:', error);
+            content = ContentFetcher.getFallbackContent(destination);
+        }
+        
         return `
             <div style="padding: 20px;">
                 <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 15px; text-align: center; margin-bottom: 30px;">
                     <h2 style="margin: 0; font-size: 2em;">📚 My ${destination} Reading Adventure</h2>
                     <p style="margin: 10px 0 0 0; font-size: 1.1em; opacity: 0.9;">A story book just for you!</p>
+                    <p style="margin: 10px 0 0 0; font-size: 0.9em; opacity: 0.8;">✨ Featuring real facts from Wikipedia & NPS</p>
                 </div>
                 
                 <div style="background: #fff9e6; padding: 25px; border-radius: 10px; margin-bottom: 30px; border-left: 5px solid #ffd700;">
                     <h3 style="margin: 0 0 15px 0; color: #f57c00;">📖 Choose Your Reading Level:</h3>
                     <div style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;">
-                        <button onclick="showStory('beginner', '${destination}', '${tripType}')" style="padding: 15px 25px; background: #4caf50; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: bold;">🌱 Beginner Reader</button>
-                        <button onclick="showStory('intermediate', '${destination}', '${tripType}')" style="padding: 15px 25px; background: #2196f3; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: bold;">📗 Intermediate Reader</button>
-                        <button onclick="showStory('advanced', '${destination}', '${tripType}')" style="padding: 15px 25px; background: #9c27b0; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: bold;">🌟 Advanced Reader</button>
+                        <button onclick="showDynamicStory('beginner', '${destination}', ${JSON.stringify(content).replace(/"/g, '&quot;')})" style="padding: 15px 25px; background: #4caf50; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: bold;">🌱 Beginner Reader</button>
+                        <button onclick="showDynamicStory('intermediate', '${destination}', ${JSON.stringify(content).replace(/"/g, '&quot;')})" style="padding: 15px 25px; background: #2196f3; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: bold;">📗 Intermediate Reader</button>
+                        <button onclick="showDynamicStory('advanced', '${destination}', ${JSON.stringify(content).replace(/"/g, '&quot;')})" style="padding: 15px 25px; background: #9c27b0; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: bold;">🌟 Advanced Reader</button>
                     </div>
                     <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 8px;">
                         <p style="margin: 0; font-size: 0.95em; color: #666;"><strong>Tip:</strong></p>
@@ -138,118 +231,561 @@ const GameGenerators = {
             </div>
             
             <script>
-            function showStory(level, destination, tripType) {
+            function showDynamicStory(level, destination, content) {
                 const stories = {
-                    beginner: generateBeginnerStory(destination, tripType),
-                    intermediate: generateIntermediateStory(destination, tripType),
-                    advanced: generateAdvancedStory(destination, tripType)
+                    beginner: generateBeginnerDynamicStory(destination, content),
+                    intermediate: generateIntermediateDynamicStory(destination, content),
+                    advanced: generateAdvancedDynamicStory(destination, content)
                 };
                 document.getElementById('storyContent').innerHTML = stories[level];
                 document.getElementById('storyContent').scrollIntoView({ behavior: 'smooth' });
             }
             
-            function generateBeginnerStory(dest, type) {
-                const beginnerStories = {
-                    city: [
-                        { ch: 1, title: 'We Go!', text: 'Today we go to ' + dest + '.\nI am so happy!\nMom packs my bag.\nDad gets the car.', emoji: '🚗' },
-                        { ch: 2, title: 'We Are Here!', text: 'We are in ' + dest + '!\nI see big buildings.\nThey are very tall.\nWow!', emoji: '🏢' },
-                        { ch: 3, title: 'So Many Cars!', text: 'I see many cars.\nBeep! Beep!\nThe cars go fast.\nRed, blue, yellow cars!', emoji: '🚕' },
-                        { ch: 4, title: 'Yummy Food!', text: 'We eat lunch.\nThe food is yummy!\nI eat it all up.\nMy tummy is happy!', emoji: '🍕' },
-                        { ch: 5, title: 'Fun Time!', text: 'We walk and walk.\nI see new things!\nThis is so fun!\nI like ' + dest + '!', emoji: '🎉' },
-                        { ch: 6, title: 'Bed Time', text: 'Now it is night.\nI am sleepy.\nI had the best day!\nGood night!', emoji: '😴' }
-                    ],
-                    beach: [
-                        { ch: 1, title: 'Beach Day!', text: 'We go to the beach!\nI bring my bucket.\nI bring my shovel.\nLet\'s go!', emoji: '🏖️' },
-                        { ch: 2, title: 'Sand!', text: 'The sand is soft.\nIt feels nice.\nI dig and dig.\nI make a big hole!', emoji: '🏝️' },
-                        { ch: 3, title: 'Water Fun', text: 'The water is cool!\nSplash! Splash!\nThe waves are big.\nThis is fun!', emoji: '🌊' },
-                        { ch: 4, title: 'Sandcastle', text: 'I build a castle.\nIt is very tall!\nI put shells on top.\nLook at my castle!', emoji: '🏰' },
-                        { ch: 5, title: 'Birds!', text: 'I see birds flying.\nThey say "CAW! CAW!"\nThey want my snack!\nSilly birds!', emoji: '🕊️' },
-                        { ch: 6, title: 'Best Day', text: 'I love the beach!\nI am happy.\nI want to come back!\nThe End!', emoji: '😊' }
-                    ]
-                };
-                const story = (beginnerStories[type] || beginnerStories.city);
-                return story.map(page => `
+            function generateBeginnerDynamicStory(dest, content) {
+                // Extract location-specific details in kid-friendly way
+                const specialPlace = content.landmarks && content.landmarks.length > 0 
+                    ? content.landmarks[0].split(' - ')[0].substring(0, 30) 
+                    : 'something amazing';
+                
+                const funActivity = content.activities && content.activities.length > 0 
+                    ? content.activities[0].toLowerCase() 
+                    : 'exploring';
+                
+                // Analyze actual environment
+                const env = ContentFetcher.analyzeEnvironment(content);
+                console.log('[BeginnerStory] Environment:', env.characteristics);
+                
+                // Fun story skeleton with contextually appropriate details
+                const chapters = [
+                    { ch: 1, title: 'We Go!', text: 'Today we go to ' + dest + '.\\nI am so happy!\\nMom packs my bag.\\nDad gets the car.', emoji: '🚗' },
+                    { ch: 2, title: 'We Are Here!', text: 'We are in ' + dest + '!\\nWow! Look at everything!\\nThis is so cool!', emoji: '🏢' },
+                ];
+                
+                // Generate contextually appropriate chapters based on ACTUAL environment
+                let envChapters = [];
+                
+                if (env.isThemePark) {
+                    envChapters = [
+                        { ch: 3, title: 'So Fun!', text: 'Rides everywhere!\\n' + (specialPlace.length < 25 ? specialPlace + '!\\n' : '') + 'I can\\'t wait!', emoji: '🎢' },
+                        { ch: 4, title: 'Wheee!', text: 'Round and round!\\nUp and down!\\nSo much fun!', emoji: '🎠' },
+                        { ch: 5, title: 'Yummy!', text: 'Cotton candy!\\nIce cream!\\nSo sweet!', emoji: '🍭' }
+                    ];
+                } else if (env.isDesert) {
+                    envChapters = [
+                        { ch: 3, title: 'So Hot!', text: 'The sun is very hot!\\nThe land is dry.\\n' + (specialPlace.length < 25 ? 'I see ' + specialPlace + '!' : 'Sand and rocks!'), emoji: '🏜️' },
+                        { ch: 4, title: 'Wide Open!', text: 'The desert is so big!\\nI can see far away.\\nNo trees here.\\nJust open space!', emoji: '☀️' },
+                        { ch: 5, title: 'Desert Life!', text: 'A lizard runs fast!\\nAnimals like it hot.\\nSo cool to see!', emoji: '🦎' }
+                    ];
+                } else if (env.isGeothermal) {
+                    envChapters = [
+                        { ch: 3, title: 'Steam!', text: 'Steam comes up!\\nFrom the ground!\\n' + (specialPlace.length < 25 ? specialPlace + ' is here!' : 'So magical!'), emoji: '💨' },
+                        { ch: 4, title: 'Hot Water!', text: 'I see hot springs!\\nThey bubble and steam.\\nDon\\'t touch! Too hot!', emoji: '♨️' },
+                        { ch: 5, title: 'Colors!', text: 'The rocks are yellow!\\nAnd orange too!\\nSo pretty!', emoji: '🌋' }
+                    ];
+                } else if (env.isGlacial) {
+                    envChapters = [
+                        { ch: 3, title: 'Snow!', text: 'Everything is white!\\nSnow and ice!\\n' + (specialPlace.length < 25 ? specialPlace + ' is big!' : 'So sparkly!'), emoji: '🏔️' },
+                        { ch: 4, title: 'Cold!', text: 'Brrr! So cold!\\nI wear my warm coat!\\nMy breath makes clouds!', emoji: '❄️' },
+                        { ch: 5, title: 'Glaciers!', text: 'Huge ice rivers!\\nThey move slow!\\nSo pretty and blue!', emoji: '🧊' }
+                    ];
+                } else if (env.isVolcanic) {
+                    envChapters = [
+                        { ch: 3, title: 'Big Mountain!', text: 'The mountain is huge!\\n' + (specialPlace.length < 25 ? specialPlace + '!\\n' : '') + 'It was a volcano!', emoji: '🌋' },
+                        { ch: 4, title: 'So Tall!', text: 'The peak is in the clouds!\\nI look up and up!\\nSo high!', emoji: '⛰️' },
+                        { ch: 5, title: 'Special!', text: 'This mountain is special!\\nMade by fire!\\nNow it sleeps!', emoji: '🔥' }
+                    ];
+                } else if (env.isForest) {
+                    envChapters = [
+                        { ch: 3, title: 'Big Trees!', text: 'The trees are huge!\\nSo tall!\\n' + (specialPlace.length < 25 ? 'I see ' + specialPlace + '!' : 'I feel tiny!'), emoji: '🌲' },
+                        { ch: 4, title: 'Forest Sounds!', text: 'Birds sing!\\nTweet! Tweet!\\nThe forest is alive!', emoji: '🐦' },
+                        { ch: 5, title: 'Nature!', text: 'Squirrels run!\\nUp and down trees!\\nSo fast!', emoji: '🐿️' }
+                    ];
+                } else if (env.isCoastal) {
+                    envChapters = [
+                        { ch: 3, title: 'Water!', text: 'The ocean is so blue!\\nSplash! Splash!\\n' + (specialPlace.length < 25 ? specialPlace + ' is there!' : 'Waves are big!'), emoji: '🌊' },
+                        { ch: 4, title: 'Beach Fun!', text: 'I build in the sand!\\nTowers and walls!\\nSo fun!', emoji: '🏰' },
+                        { ch: 5, title: 'Shells!', text: 'I find pretty shells!\\nThe ocean gave them!\\nIn my bucket!', emoji: '🐚' }
+                    ];
+                } else if (env.isUrban) {
+                    envChapters = [
+                        { ch: 3, title: specialPlace.length < 20 ? 'I See It!' : 'Amazing!', text: 'Look! ' + specialPlace + '!\\nIt is so big!\\nI want to see more!', emoji: '🏛️' },
+                        { ch: 4, title: 'So Busy!', text: 'I see many cars.\\nBeep! Beep!\\nSo many people!', emoji: '🚕' },
+                        { ch: 5, title: 'Yummy!', text: 'We eat lunch.\\nThe food is yummy!\\nI try something new!', emoji: '🍕' }
+                    ];
+                } else {
+                    // Mountain or general nature
+                    envChapters = [
+                        { ch: 3, title: 'Nature!', text: (specialPlace.length < 25 ? specialPlace + '!\\n' : '') + 'This place is special!\\nTrees and rocks!\\nSo pretty!', emoji: '🏔️' },
+                        { ch: 4, title: 'Fresh Air!', text: 'The air smells good.\\nI take deep breaths.\\nSo fresh!', emoji: '🌲' },
+                        { ch: 5, title: 'Wildlife!', text: 'I see animals!\\nThey live here.\\nSo cool!', emoji: '🦌' }
+                    ];
+                }
+                
+                chapters.push(...envChapters);
+                
+                // Fun activity ending
+                chapters.push({ 
+                    ch: 6, title: 'More Fun!', 
+                    text: 'We try ' + funActivity + '!\\nI love it so much!\\nThis is the best!', 
+                    emoji: '🎉' 
+                });
+                
+                chapters.push({ ch: 7, title: 'Best Day', text: 'I love ' + dest + '!\\nI am happy.\\nI want to come back!\\nThe End!', emoji: '😊' });
+                
+                return chapters.map(page => \`
                     <div style="page-break-after: always; padding: 30px; background: white; border: 3px solid #4caf50; border-radius: 15px; margin-bottom: 20px;">
                         <div style="background: #4caf50; color: white; padding: 10px 20px; border-radius: 8px; display: inline-block; margin-bottom: 20px;">
-                            <strong>Chapter ${page.ch}: ${page.title}</strong>
+                            <strong>Chapter \${page.ch}: \${page.title}</strong>
                         </div>
-                        <div style="font-size: 100px; text-align: center; margin: 20px 0;">${page.emoji}</div>
-                        <p style="font-size: 1.6em; line-height: 2; text-align: center; color: #333; white-space: pre-line;">${page.text}</p>
+                        <div style="font-size: 100px; text-align: center; margin: 20px 0;">\${page.emoji}</div>
+                        <p style="font-size: 1.6em; line-height: 2; text-align: center; color: #333; white-space: pre-line;">\${page.text}</p>
                     </div>
-                `).join('') + '<div style="margin-top: 30px; padding: 25px; background: #e8f5e9; border-radius: 10px; text-align: center;"><p style="font-size: 1.3em; margin: 0;">🌟 You did it! You read the whole book! 🌟</p></div>';
+                \`).join('') + '<div style="margin-top: 30px; padding: 25px; background: #e8f5e9; border-radius:10px; text-align: center;"><p style="font-size: 1.3em; margin: 0;">🌟 You did it! You read the whole book about ' + dest + '! 🌟</p></div>';
             }
             
-            function generateIntermediateStory(dest, type) {
-                const intermediateStories = {
-                    city: [
-                        { ch: 1, title: 'The Journey Begins', text: 'Emma was excited! Today she was going to visit ' + dest + ' with her family. She had never been to such a big city before. She packed her favorite stuffed bear and her camera. "I\'m going to take so many pictures!" she said.', emoji: '📸' },
-                        { ch: 2, title: 'Amazing Buildings', text: 'When Emma arrived, she couldn\'t believe her eyes. The buildings were taller than she ever imagined! Some had glass windows that sparkled in the sun. "Those buildings touch the clouds!" Emma told her mom. She took her first picture.', emoji: '🏙️' },
-                        { ch: 3, title: 'City Sounds', text: 'The city was loud and busy. Cars honked their horns. People talked and laughed. Music played from open windows. Emma had never heard so many sounds at once! It was different from her quiet town, but she liked it.', emoji: '🔊' },
-                        { ch: 4, title: 'New Friends', text: 'At the park, Emma met a girl named Maya who lived in ' + dest + '. Maya showed Emma her favorite spot by the fountain. They fed the birds together. "You can visit me every time you come here!" Maya said with a smile.', emoji: '👭' },
-                        { ch: 5, title: 'Special Lunch', text: 'For lunch, Emma tried food she had never eaten before. Her dad helped her read the menu. She chose something new and brave. When it arrived, it looked strange, but it smelled wonderful. She took a bite. "Delicious!" she exclaimed.', emoji: '🍜' },
-                        { ch: 6, title: 'Night Lights', text: 'As the sun set, something magical happened. Lights turned on all over the city! Buildings glowed. Street lamps twinkled. Emma watched from her hotel window. "  ' + dest + ' is beautiful at night," she whispered.', emoji: '✨' },
-                        { ch: 7, title: 'Going Home', text: 'The next day, it was time to go home. Emma felt sad to leave but happy about her adventure. She had so many photos and memories. "Can we come back soon?" she asked. Her parents smiled and said, "Of course!" The End.', emoji: '🏡' }
-                    ],
-                    beach: [
-                        { ch: 1, title: 'Beach Vacation!', text: 'Liam had been waiting all year for this trip to the beach at ' + dest + '. He loved the ocean more than anything. The car ride seemed to take forever! Finally, he saw a sign: "Beach - 1 Mile." His heart started beating fast with excitement.', emoji: '🎊' },
-                        { ch: 2, title: 'First View', text: 'When Liam saw the ocean, he stopped and stared. The water went on forever! It was bluer than the sky. White waves rolled onto the sand. Seagulls flew overhead. "It\'s more amazing than I remembered!" he shouted.', emoji: '🌊' },
-                        { ch: 3, title: 'Shell Hunt', text: 'Liam walked along the beach, looking for shells. He found spiral ones, pink ones, and even a perfect sand dollar! Each shell was like a tiny treasure. He filled his bucket carefully. These would be perfect memories to take home.', emoji: '🐚' },
-                        { ch: 4, title: 'Sandcastle Contest', text: 'Liam entered a sandcastle building contest. He worked hard, patting sand and carving towers. He added a moat and a bridge. Other kids built castles too. When the judges came, Liam won a ribbon for "Most Creative!" He was so proud.', emoji: '🏆' },
-                        { ch: 5, title: 'Ocean Swimming', text: 'The water felt cold at first, but soon Liam got used to it. He jumped over waves and floated on his back. A small fish swam by his feet! The ocean was full of life and wonder. He could swim here all day.', emoji: '🏊' },
-                        { ch: 6, title: 'Sunset Magic', text: 'That evening, Liam\'s family watched the sunset from the beach. The sky turned orange, pink, and purple. The sun looked like a giant orange ball sinking into the water. "This is the most beautiful thing I\'ve ever seen," Liam said.', emoji: '🌅' },
-                        { ch: 7, title: 'Beach Memories', text: 'On the last day, Liam took one more walk on the beach. He wanted to remember everything - the sound of waves, the feeling of sand, the salty smell. He knew he would come back to ' + dest + ' again someday. The End.', emoji: '💭' }
-                    ]
-                };
-                const story = (intermediateStories[type] || intermediateStories.city);
-                return story.map(page => `
+            function generateIntermediateDynamicStory(dest, content) {
+                // Extract details for the narrative
+                const specialPlace = content.landmarks && content.landmarks.length > 0 
+                    ? content.landmarks[0].split(' - ')[0] 
+                    : null;
+                
+                const interestingFact = content.facts && content.facts.length > 0 
+                    ? ContentFetcher.moderateText(content.facts[0])
+                    : null;
+                
+                const activity = content.activities && content.activities.length > 0 
+                    ? content.activities[0].toLowerCase() 
+                    : 'exploring';
+                
+                // Analyze actual environment
+                const env = ContentFetcher.analyzeEnvironment(content);
+                console.log('[IntermediateStory] Environment:', env.characteristics);
+                
+                // Character-driven story with contextually appropriate adventures
+                const chapters = [];
+                
+                // Story arc with protagonist
+                chapters.push({ 
+                    ch: 1, title: 'The Journey Begins', 
+                    text: 'Emma packed her backpack with excitement. Today she was going to ' + dest + '! She had been dreaming about this trip for weeks. "Are you ready for an adventure?" her dad asked with a smile. Emma nodded eagerly. She couldn\\'t wait!', 
+                    emoji: '🎒' 
+                });
+                
+                chapters.push({ 
+                    ch: 2, title: 'First Impressions', 
+                    text: 'When Emma arrived at ' + dest + ', her eyes went wide. Everything was so different from home! ' + (interestingFact || 'The place was full of wonders to discover.') + ' "Wow!" Emma whispered, trying to take it all in.',
+                    emoji: '😮' 
+                });
+                
+                // Contextually appropriate adventures based on actual environment
+                if (env.isThemePark) {
+                    chapters.push({ 
+                        ch: 3, title: 'Welcome to the Park', 
+                        text: 'Emma walked through the gates of ' + dest + '. Music played and colorful attractions surrounded her. ' + (specialPlace ? 'She spotted ' + specialPlace + ' and knew she had to try it!' : 'Rides, shows, and games stretched as far as she could see.') + ' This was going to be the best day ever!',
+                        emoji: '🎢' 
+                    });
+                    chapters.push({ 
+                        ch: 4, title: 'Thrill and Wonder', 
+                        text: 'Emma rode roller coasters that made her stomach flip. She watched incredible shows with amazing performers. Everywhere she looked, there was something new and exciting. ' + (activity !== 'exploring' ? 'She especially loved ' + activity + '!' : 'Each attraction was more fun than the last!') + ' Her face hurt from smiling so much.',
+                        emoji: '🎠' 
+                    });
+                } else if (env.isDesert) {
+                    chapters.push({ 
+                        ch: 3, title: 'Desert Discovery', 
+                        text: 'Emma stepped out into the desert heat. The dry, vast landscape stretched endlessly. ' + (specialPlace ? 'In the distance, she could see ' + specialPlace + ', surrounded by nothing but sand and rock.' : 'Red rock formations and sandy valleys created an otherworldly scene.') + ' She had never seen anything like this!',
+                        emoji: '🏜️' 
+                    });
+                    chapters.push({ 
+                        ch: 4, title: 'Extreme Conditions', 
+                        text: 'The sun beat down intensely. Emma learned that deserts get very hot during the day but cold at night. She saw how plants and animals adapted to survive with almost no water. A quick lizard darted across the hot sand. Nature was tough here!',
+                        emoji: '🦎' 
+                    });
+                } else if (env.isGeothermal) {
+                    chapters.push({ 
+                        ch: 3, title: 'Geothermal Wonders', 
+                        text: 'Emma couldn\\'t believe her eyes. Steam rose from vents in the ground! ' + (specialPlace ? specialPlace + ' erupted with a loud whoosh, sending hot water high into the air.' : 'Hot springs bubbled with colorful minerals.') + ' The earth was alive beneath her feet!',
+                        emoji: '💨' 
+                    });
+                    chapters.push({ 
+                        ch: 4, title: 'Earth\\'s Power', 
+                        text: 'A ranger explained how ' + dest + ' sits on top of volcanic activity. The colorful rocks were created by minerals and heat. Emma learned about geysers, hot springs, and fumaroles. She felt like she was standing on a different planet!',
+                        emoji: '🌋' 
+                    });
+                } else if (env.isGlacial) {
+                    chapters.push({ 
+                        ch: 3, title: 'Frozen Majesty', 
+                        text: 'Emma gazed up at the snow-covered peak. ' + (specialPlace ? specialPlace + ' rose before her, a massive mountain draped in glaciers and snow.' : 'The mountain towered above, its white slopes gleaming in the sunlight.') + ' She\\'d never seen anything so magnificent!',
+                        emoji: '🏔️' 
+                    });
+                    chapters.push({ 
+                        ch: 4, title: 'Rivers of Ice', 
+                        text: 'A guide explained how ' + dest + '\\'s glaciers formed over thousands of years. Emma learned about ice fields, crevasses, and how glaciers slowly carve valleys. The air was crisp and cold. ' + (activity !== 'exploring' ? 'They went ' + activity + ' to see more of the mountain.' : 'Every view took her breath away!') + '',
+                        emoji: '❄️' 
+                    });
+                } else if (env.isVolcanic) {
+                    chapters.push({ 
+                        ch: 3, title: 'Volcanic Giant', 
+                        text: 'Emma stood at the base of the massive volcanic mountain. ' + (specialPlace ? specialPlace + ' towered above, its peak reaching into the clouds.' : 'The volcanic peak dominated the landscape.') + ' This mountain was born from fire millions of years ago!',
+                        emoji: '🌋' 
+                    });
+                    chapters.push({ 
+                        ch: 4, title: 'Mountain Majesty', 
+                        text: 'A ranger told Emma how ' + dest + ' formed through volcanic eruptions. The mountain\\'s crater was still visible at the summit. Though the volcano sleeps now, it shaped everything around it. Emma learned about lava flows, craters, and volcanic rock. Nature\\'s power was incredible!',
+                        emoji: '⛰️' 
+                    });
+                } else if (env.isForest) {
+                    chapters.push({ 
+                        ch: 3, title: 'Into the Forest', 
+                        text: 'Emma entered the forest, surrounded by massive trees. ' + (specialPlace ? specialPlace + ' towered above, making her feel tiny.' : 'The forest canopy blocked out the sun.') + ' The air smelled fresh and piney. Birds sang overhead. This was magical!',
+                        emoji: '🌲' 
+                    });
+                    chapters.push({ 
+                        ch: 4, title: 'Forest Life', 
+                        text: 'Emma spotted squirrels gathering acorns and birds flitting between branches. She learned how the forest ecosystem works - trees providing homes, decomposing leaves feeding the soil. Everything was connected. Nature was amazing!',
+                        emoji: '🐿️' 
+                    });
+                } else if (env.isCoastal) {
+                    chapters.push({ 
+                        ch: 3, title: 'Ocean Adventures', 
+                        text: 'Emma ran to the water\\'s edge. The waves splashed her toes - cold at first, but refreshing! ' + (specialPlace ? 'In the distance, she could see ' + specialPlace + ', which made the beach even more special.' : 'The endless blue ocean stretched to the horizon.') + ' She couldn\\'t believe she was really here!',
+                        emoji: '🌊' 
+                    });
+                    chapters.push({ 
+                        ch: 4, title: 'Treasure Hunt', 
+                        text: 'Emma searched the shoreline for shells and sea glass. Each find felt like discovering treasure! She found a perfect sand dollar and couldn\\'t stop smiling. An older boy showed her the best spots to search. "The beach at ' + dest + ' has the coolest shells," he said proudly.',
+                        emoji: '🐚' 
+                    });
+                } else if (env.isUrban) {
+                    chapters.push({ 
+                        ch: 3, title: 'City Exploration', 
+                        text: specialPlace 
+                            ? 'As Emma walked through the city, she saw ' + specialPlace + '. It was even more amazing in person! She took out her camera to capture the moment. A friendly local told her fun facts about it, and Emma listened eagerly.'
+                            : 'As Emma explored the busy streets, she discovered hidden gems around every corner. The tall buildings, the bustling crowds, and the energy of the city made her feel alive. This was the adventure she had been waiting for!',
+                        emoji: '🏛️' 
+                    });
+                    chapters.push({ 
+                        ch: 4, title: 'A New Friend', 
+                        text: 'At a park, Emma met a girl named Maya who lived in ' + dest + '. "Want to feed the birds?" Maya asked. Soon they were laughing and chatting like old friends. Maya showed Emma her favorite secret spots. ' + dest + ' felt less overwhelming with a friend by her side.',
+                        emoji: '👭' 
+                    });
+                } else {
+                    // Mountain or general nature
+                    chapters.push({ 
+                        ch: 3, title: 'Natural Beauty', 
+                        text: specialPlace 
+                            ? 'Emma hiked along the trail, breathing in the fresh air. When she reached a clearing, she gasped. There it was - ' + specialPlace + '! Even better than the pictures. She felt like she was on top of the world.'
+                            : 'Emma explored ' + dest + ', taking in all the natural beauty. Mountains, valleys, and wide open spaces surrounded her. The fresh air and peaceful quiet made her feel connected to nature.',
+                        emoji: '🏔️' 
+                    });
+                    chapters.push({ 
+                        ch: 4, title: 'Wildlife Encounter', 
+                        text: 'Emma sat quietly to rest. Suddenly, wildlife appeared! ' + (env.hasWildlife ? 'She watched in amazement as animals went about their day in their natural habitat.' : 'Birds flew overhead and small creatures rustled in the bushes.') + ' Emma\\'s heart pounded with excitement. ' + dest + ' was full of surprises.',
+                        emoji: '🦌' 
+                    });
+                }
+                
+                // Activity chapter
+                chapters.push({ 
+                    ch: 5, title: 'Trying Something New', 
+                    text: 'Emma decided to be brave and try ' + activity + '. At first she was nervous, but her family encouraged her. "You can do it!" they cheered. Emma took a deep breath and gave it a try. It turned out to be her favorite part of the whole trip!',
+                    emoji: '🎉' 
+                });
+                
+                // Reflection ending
+                chapters.push({ 
+                    ch: 6, title: 'Memories Made', 
+                    text: 'On the last evening, Emma looked at her photos and smiled. She had explored ' + dest + ', made new friends, and tried new things. She felt different somehow - braver and more curious about the world. "Can we come back next year?" she asked hopefully.',
+                    emoji: '📸' 
+                });
+                
+                chapters.push({ 
+                    ch: 7, title: 'Going Home', 
+                    text: 'As Emma packed her bag to leave, she took one last look around. ' + dest + ' would always be special to her now. She couldn\\'t wait to tell her friends about her adventure. But she also knew - this was just the beginning. The world was full of amazing places to explore. The End.',
+                    emoji: '🏡' 
+                });
+                
+                return chapters.map(page => \`
                     <div style="page-break-after: always; padding: 30px; background: white; border: 3px solid #2196f3; border-radius: 15px; margin-bottom: 20px;">
                         <div style="background: #2196f3; color: white; padding: 12px 24px; border-radius: 8px; display: inline-block; margin-bottom: 20px;">
-                            <strong style="font-size: 1.2em;">Chapter ${page.ch}: ${page.title}</strong>
+                            <strong style="font-size: 1.2em;">Chapter \${page.ch}: \${page.title}</strong>
                         </div>
-                        <div style="font-size: 80px; text-align: center; margin: 20px 0;">${page.emoji}</div>
-                        <p style="font-size: 1.3em; line-height: 1.8; color: #333; text-align: justify; text-indent: 30px;">${page.text}</p>
+                        <div style="font-size: 80px; text-align: center; margin: 20px 0;">\${page.emoji}</div>
+                        <p style="font-size: 1.3em; line-height: 1.8; color: #333; text-align: justify; text-indent: 30px;">\${page.text}</p>
                     </div>
-                `).join('') + '<div style="margin-top: 30px; padding: 25px; background: #e3f2fd; border-radius: 10px; text-align: center;"><p style="font-size: 1.3em; margin: 0;">📚 Excellent reading! You finished a chapter book! 📚</p></div>';
+                \`).join('') + '<div style="margin-top: 30px; padding: 25px; background: #e3f2fd; border-radius: 10px; text-align: center;"><p style="font-size: 1.3em; margin: 0;">📚 Excellent reading! You finished Emma\\'s adventure in ' + dest + '! 📚</p></div>';
             }
             
-            function generateAdvancedStory(dest, type) {
-                const advancedStories = {
-                    city: [
-                        { ch: 1, title: 'An Unexpected Adventure', text: 'Sophia had always lived in a small town where everyone knew everyone. So when her parents announced they were spending a week in ' + dest + ', she felt both nervous and thrilled. She spent the night before packing and repacking her suitcase, wondering what adventures awaited her in the bustling city.', emoji: '🎒' },
-                        { ch: 2, title: 'First Impressions', text: 'The moment Sophia stepped out of the train station, she was overwhelmed. Towers of glass and steel reached toward the clouds. Hundreds of people rushed past, each with their own destination. Street vendors called out, offering everything from hot pretzels to colorful scarves. The energy was electric, and Sophia felt her nervousness melt into curiosity.', emoji: '🌆' },
-                        { ch: 3, title: 'Getting Lost... and Found', text: 'On the second day, something unexpected happened. While her parents were busy at a museum gift shop, Sophia wandered down a colorful alley filled with street art. When she turned around, she couldn\'t find her way back! Her heart pounded. Then she remembered her dad\'s advice: "Stay calm and ask for help." A friendly shopkeeper pointed her in the right direction, and soon she was reunited with her relieved parents.', emoji: '🗺️' },
-                        { ch: 4, title: 'A World of Flavors', text: 'That evening, Sophia\'s family ate at a restaurant unlike any in her hometown. The menu featured foods from around the world. Sophia decided to be brave. She ordered something she couldn\'t even pronounce! When it arrived, the dish was colorful and aromatic. Taking her first bite, she discovered flavors she never knew existed - sweet, spicy, and savory all at once. "This is amazing!" she declared, already planning what to try next.', emoji: '🍽️' },
-                        { ch: 5, title: 'The View from Above', text: 'Sophia\'s favorite moment came when they visited the observation deck of the tallest building in ' + dest + '. The elevator ride made her ears pop. When the doors opened, she gasped. The entire city spread below like a toy village. She could see parks, rivers, and roads stretching to the horizon. From up here, the busy city seemed peaceful. She felt like she was on top of the world.', emoji: '🏙️' },
-                        { ch: 6, title: 'Making Connections', text: 'In the park, Sophia joined a group of kids playing soccer. At first, she felt shy, but soon she was laughing and running with her new friends. They came from all over the world - Japan, Brazil, Egypt, and more. Even though they spoke with different accents and had different customs, they all understood the language of play and friendship. Sophia exchanged contact information with a girl named Keiko, promising to stay in touch.', emoji: '⚽' },
-                        { ch: 7, title: 'Changed Forever', text: 'On the train ride home, Sophia pressed her face against the window, watching ' + dest + ' disappear in the distance. She thought about everything she\'d experienced - the sights, sounds, tastes, and people. She realized that the world was much bigger and more wonderful than she\'d imagined. But most importantly, she\'d discovered something about herself: she was braver and more adventurous than she\'d ever known. This trip hadn\'t just shown her a new city; it had shown her new possibilities for her own life. The End.', emoji: '🌟' }
-                    ],
-                    beach: [
-                        { ch: 1, title: 'The Letter', text: 'Marcus found the message in a bottle on his first morning at ' + dest + ' beach. The bottle was old, covered in barnacles, and sealed with wax. Inside was a hand-drawn map with strange symbols and a riddle: "Where land meets sea, beneath the crooked tree, a treasure waits for thee." Marcus\'s heart raced. A real treasure map! He had to find out if it was genuine.', emoji: '📜' },
-                        { ch: 2, title: 'The Investigation Begins', text: 'Marcus studied the map carefully. It showed distinctive rock formations and landmarks along the beach. He recognized some of them from his morning walk! Armed with the map, his notebook, and his determination, he set out on his treasure hunt. The hot sand burned his feet, but Marcus barely noticed. Adventure was calling.', emoji: '🔍' },
-                        { ch: 3, title: 'Unexpected Allies', text: 'At the tidal pools, Marcus met twins named Zoe and Max who were studying sea creatures for a school project. When they saw his map, their eyes lit up. "We know this beach better than anyone," Zoe said. "We can help!" The three of them formed a team. Max had a metal detector, Zoe knew all the hidden paths, and Marcus had the map. Together, they were unstoppable.', emoji: '👫' },
-                        { ch: 4, title: 'False Leads and Persistence', text: 'Their first three attempts led nowhere. The "crooked tree" in the map could have been any of dozens of palm trees bent by the wind. They dug in several spots, finding only broken shells and driftwood. As the sun climbed higher and the day grew hotter, Max wanted to give up. But Marcus convinced them to try one more location - an old tree near the northern cliffs that he\'d seen earlier.', emoji: '🌴' },
-                        { ch: 5, title: 'The Discovery', text: 'Max\'s metal detector beeped frantically near the tree\'s roots. The three friends dug carefully, their hands trembling with excitement. Six inches down, they hit something hard. It was a metal box, rusty but intact! Inside, they found old coins, a weathered journal, and photographs from fifty years ago. The "treasure" wasn\'t valuable in money, but it was priceless in history - it was a time capsule left by a child their age decades ago!', emoji: '💎' },
-                        { ch: 6, title: 'Sharing the Story', text: 'The local newspaper wanted to write about their discovery! The museum asked if they would donate the time capsule so everyone could learn about life at ' + dest + ' beach in the past. Marcus, Zoe, and Max agreed, proud that their adventure would teach others. The child who had buried the capsule - now a grandmother - even came to meet them, tears in her eyes, amazed her childhood treasure had been found.', emoji: '📰' },
-                        { ch: 7, title: 'The Real Treasure', text: 'As the week ended, Marcus realized the real treasure wasn\'t what they\'d found in the box. It was the adventure itself, the problem-solving, and the friendship he\'d formed with Zoe and Max. They\'d promised to meet at the same beach every summer. Looking out at the ocean one last time, Marcus smiled. He\'d come to the beach expecting a simple vacation. Instead, he\'d found a mystery, solved it with friends, and created memories that would last forever. Some treasures, he now knew, couldn\'t be held in your hands - they had to be held in your heart. The End.', emoji: '❤️' }
-                    ]
-                };
-                const story = (advancedStories[type] || advancedStories.city);
-                return story.map(page => `
+            function generateAdvancedDynamicStory(dest, content) {
+                // Extract rich details for advanced narrative
+                const specialPlace = content.landmarks && content.landmarks.length > 0 
+                    ? content.landmarks[0].split(' - ')[0] 
+                    : null;
+                
+                const historicalDetail = content.history && content.history.length > 0 
+                    ? content.history[0]
+                    : null;
+                
+                const naturalFeature = content.nature && content.nature.length > 0 
+                    ? content.nature[0] 
+                    : null;
+                
+                const activity = content.activities && content.activities.length > 0 
+                    ? content.activities[0].toLowerCase() 
+                    : 'exploring';
+                
+                // Analyze actual environment
+                const env = ContentFetcher.analyzeEnvironment(content);
+                console.log('[AdvancedStory] Environment:', env.characteristics);
+                
+                // Rich, character-driven narrative with contextually appropriate adventures
+                const chapters = [];
+                
+                chapters.push({ 
+                    ch: 1, title: 'An Unexpected Journey', 
+                    text: 'Sophia had always loved reading about faraway places, but she\\'d never imagined she would actually visit ' + dest + '. When her parents surprised her with the trip, she could hardly believe it. That night, she researched everything she could find. The more she learned, the more excited she became. This wasn\\'t just a vacation - it was going to be an adventure.',
+                    emoji: '🌟' 
+                });
+                
+                chapters.push({ 
+                    ch: 2, title: 'First Impressions', 
+                    text: 'The moment Sophia arrived at ' + dest + ', she felt both overwhelmed and thrilled. ' + (historicalDetail || 'The place had a character and presence that was impossible to ignore.') + ' Walking through, Sophia tried to imagine all the stories this place could tell.',
+                    emoji: '🎭' 
+                });
+                
+                // Generate contextually rich narrative based on actual environment
+                if (env.isThemePark) {
+                    chapters.push({ 
+                        ch: 3, title: 'Entering the Magic', 
+                        text: 'Sophia walked through the entrance of ' + dest + ', and suddenly she wasn\\'t just a visitor - she was part of something magical. ' + (specialPlace ? 'The iconic ' + specialPlace + ' rose before her, a symbol of imagination brought to life.' : 'Carefully designed attractions created immersive worlds.') + ' Every detail, from the music to the architecture, was intentional. She appreciated the artistry and engineering that made wonder possible.',
+                        emoji: '✨' 
+                    });
+                    chapters.push({ 
+                        ch: 4, title: 'More Than Entertainment', 
+                        text: 'As Sophia explored ' + dest + ', she noticed how it brought people together. Families laughed on rides, children\\'s faces lit up meeting characters, and everyone - regardless of age or background - shared in the joy. ' + (activity !== 'exploring' ? 'She particularly enjoyed ' + activity + ', marveling at the technology and creativity involved.' : 'She saw how imagination and engineering combined to create shared happiness.') + ' This place was about more than thrills - it was about creating memories.',
+                        emoji: '🎢' 
+                    });
+                } else if (env.isDesert) {
+                    chapters.push({ 
+                        ch: 3, title: 'Desert Majesty', 
+                        text: 'Sophia stood at the edge of the vast desert landscape. ' + (specialPlace ? specialPlace + ' stretched before her, a testament to millions of years of geological forces.' : 'The dry, expansive terrain was unlike anything she\\'d seen.') + ' The intense heat, the barren beauty, the sense of being below sea level in some areas - it all created an otherworldly feeling. This harsh environment demanded respect and inspired awe.',
+                        emoji: '🏜️' 
+                    });
+                    chapters.push({ 
+                        ch: 4, title: 'Lessons in Extremes', 
+                        text: 'A ranger explained how ' + dest + ' represented one of Earth\\'s most extreme environments. Life here adapted in remarkable ways - plants with deep roots, animals nocturnal to avoid heat, minerals creating vivid colors in the rocks. Sophia learned about elevation, temperature extremes, and the delicate balance of desert ecosystems. The harshness made the beauty even more profound.',
+                        emoji: '🌡️' 
+                    });
+                } else if (env.isGeothermal) {
+                    chapters.push({ 
+                        ch: 3, title: 'Earth\\'s Power Revealed', 
+                        text: (naturalFeature ? naturalFeature + ' ' : '') + 'Sophia watched in amazement as ' + (specialPlace ? specialPlace : 'geysers and hot springs') + ' demonstrated the raw power beneath Earth\\'s surface. Steam rose from countless vents, hot water bubbled with minerals creating rainbow colors, and the smell of sulfur hung in the air. She was witnessing geology in action.',
+                        emoji: '💨' 
+                    });
+                    chapters.push({ 
+                        ch: 4, title: 'A Living Laboratory', 
+                        text: 'A geologist explained the unique geothermal features of ' + dest + '. Sophia learned about magma chambers, thermal activity, and how these conditions created an ecosystem found nowhere else on Earth. Thermophilic bacteria thrived in boiling water, creating otherworldly colors. Science came alive before her eyes.',
+                        emoji: '🔬' 
+                    });
+                } else if (env.isGlacial) {
+                    chapters.push({ 
+                        ch: 3, title: 'Rivers of Ancient Ice', 
+                        text: (naturalFeature ? naturalFeature + ' ' : '') + 'Sophia stood before the magnificent glaciers of ' + dest + '. ' + (specialPlace ? specialPlace + ' rose dramatically, its slopes covered in permanent snow and ice fields.' : 'The mountain\\'s glaciers gleamed with an otherworldly blue light.') + ' These frozen rivers had been carving the landscape for millennia, creating valleys and shaping peaks.',
+                        emoji: '🏔️' 
+                    });
+                    chapters.push({ 
+                        ch: 4, title: 'Climate Written in Ice', 
+                        text: 'A glaciologist explained how ' + dest + '\\'s glaciers were archives of climate history. Sophia learned about ice cores, crevasses, glacial retreat, and how these massive ice formations influenced weather patterns for hundreds of miles. ' + (activity !== 'exploring' ? 'They went ' + activity + ', observing the dramatic landscape shaped by ice.' : 'Standing in the presence of such ancient forces was humbling.') + ' She understood that glaciers were both beautiful and fragile.',
+                        emoji: '❄️' 
+                    });
+                } else if (env.isVolcanic) {
+                    chapters.push({ 
+                        ch: 3, title: 'Born of Fire', 
+                        text: (naturalFeature ? naturalFeature + ' ' : '') + 'Sophia gazed up at the volcanic peak of ' + dest + '. ' + (specialPlace ? specialPlace + ' stood as a testament to Earth\\'s fiery origins.' : 'The massive stratovolcano dominated the skyline.') + ' Though it appeared peaceful now, this mountain was built by countless eruptions over millions of years. The crater at its summit told stories of its volcanic past.',
+                        emoji: '🌋' 
+                    });
+                    chapters.push({ 
+                        ch: 4, title: 'Volcanic Legacy', 
+                        text: 'A volcanologist shared the history of ' + dest + '. Sophia learned about magma formation, eruption patterns, volcanic rock types, and how volcanoes create fertile soil. ' + (activity !== 'exploring' ? 'During ' + activity + ', she observed volcanic features firsthand.' : 'Every rock, every slope told part of the mountain\\'s fiery story.') + ' She understood that volcanoes, while potentially dangerous, were also creators - building mountains, enriching soil, and shaping entire regions.',
+                        emoji: '⛰️' 
+                    });
+                } else if (env.isForest) {
+                    chapters.push({ 
+                        ch: 3, title: 'Cathedral of Trees', 
+                        text: (naturalFeature ? naturalFeature + ' ' : '') + 'Sophia entered the ancient forest, where ' + (specialPlace ? specialPlace + ' stood as monuments to time itself.' : 'massive trees created a living cathedral.') + ' The canopy filtered sunlight into green-gold beams. The smell of pine and earth filled her lungs. She felt small in the best possible way - part of something vast and timeless.',
+                        emoji: '🌲' 
+                    });
+                    chapters.push({ 
+                        ch: 4, title: 'Ecosystem Connections', 
+                        text: 'A naturalist helped Sophia understand the complex web of life in ' + dest + '. From mycorrhizal fungi connecting tree roots underground to woodpeckers creating homes for dozens of other species, everything was interconnected. The forest wasn\\'t just a collection of trees - it was a community thriving through cooperation.',
+                        emoji: '🌿' 
+                    });
+                } else if (env.isCoastal) {
+                    chapters.push({ 
+                        ch: 3, title: 'Where Worlds Meet', 
+                        text: (naturalFeature ? naturalFeature + ' ' : '') + 'Sophia walked along the shore where ' + (specialPlace ? specialPlace + ' met the endless ocean.' : 'land and sea created their own unique world.') + ' The intertidal zone fascinated her - a place that was sometimes underwater, sometimes exposed, home to creatures that adapted to constant change. The rhythm of waves was hypnotic.',
+                        emoji: '🌊' 
+                    });
+                    chapters.push({ 
+                        ch: 4, title: 'Tides of Understanding', 
+                        text: 'A marine biologist showed Sophia tide pools teeming with life. She learned about ocean currents, coastal erosion, and how beaches like ' + dest + ' were crucial to both marine ecosystems and human communities. Each wave carried stories from across the ocean. She felt connected to the vastness of Earth\\'s waters.',
+                        emoji: '🐚' 
+                    });
+                } else if (env.isUrban) {
+                    chapters.push({ 
+                        ch: 3, title: 'Urban Tapestry', 
+                        text: specialPlace 
+                            ? 'Sophia\\'s breath caught when she first saw ' + specialPlace + '. Standing before it, she understood why it drew millions of visitors. But beyond the famous landmark, she discovered the real city - vibrant neighborhoods, hidden courtyards, street art telling stories. ' + dest + ' was layers upon layers of human creativity and resilience.'
+                            : 'Walking through ' + dest + ', Sophia felt the energy of urban life. The architecture told stories of different eras. Street vendors offered flavors from around the world. Every block revealed something new. The city was a living museum of human achievement.',
+                        emoji: '🏛️' 
+                    });
+                    chapters.push({ 
+                        ch: 4, title: 'Cultural Crossroads', 
+                        text: (historicalDetail ? historicalDetail + ' ' : '') + 'Sophia discovered that ' + dest + ' was more than just a city - it was a crossroads where cultures, ideas, and people converged. She visited markets where languages blended, ate food that fused traditions, and met people whose families had shaped the city\\'s identity. Every street corner had a story.',
+                        emoji: '🌆' 
+                    });
+                } else {
+                    // Mountain or general nature - but contextually aware
+                    chapters.push({ 
+                        ch: 3, title: 'Natural Grandeur', 
+                        text: (naturalFeature ? naturalFeature + ' ' : '') + 'Sophia hiked through ' + dest + ', taking in the landscape\\'s raw beauty. ' + (specialPlace ? specialPlace + ' rose majestically, shaped by countless forces over millennia.' : 'The terrain told a story of geological time - uplift, erosion, and the slow dance of tectonic plates.') + ' Standing there, she felt the weight of deep time.',
+                        emoji: '🏔️' 
+                    });
+                    chapters.push({ 
+                        ch: 4, title: 'Reading the Landscape', 
+                        text: 'A geologist helped Sophia \\"read\\" the landscape like a book. Rock layers revealed ancient seas and volcanic activity. ' + (env.hasWildlife ? 'Wildlife tracks showed the presence of bears, deer, and countless other creatures thriving in this habitat.' : 'The patterns of erosion told stories of ice ages and floods.') + ' ' + dest + ' wasn\\'t just scenery - it was Earth\\'s autobiography.',
+                        emoji: '📖' 
+                    });
+                }
+                
+                chapters.push({ 
+                    ch: 5, title: 'Personal Challenge', 
+                    text: 'Sophia decided to try ' + activity + ', something that initially intimidated her. As she began, doubt crept in, but she pushed through. With each small success, her confidence grew. When she finished, she realized the real accomplishment wasn\\'t the activity itself - it was discovering that she was capable of more than she\\'d believed. ' + dest + ' had shown her something about herself.',
+                    emoji: '💪' 
+                });
+                
+                chapters.push({ 
+                    ch: 6, title: 'Connections Beyond Words', 
+                    text: 'That evening, Sophia shared stories with other travelers - families from different countries, solo adventurers, elderly couples on lifelong journeys. Despite their different languages and backgrounds, they all understood the transformative power of exploration. ' + dest + ' had given them each something unique, yet they all shared a sense of wonder. Travel, Sophia realized, was humanity\\'s universal language.',
+                    emoji: '🌍' 
+                });
+                
+                chapters.push({ 
+                    ch: 7, title: 'Transformed', 
+                    text: 'As Sophia prepared to leave ' + dest + ', she reflected on how profoundly the experience had changed her. She\\'d been challenged, inspired, and transformed. The place itself was extraordinary - ' + (env.characteristics.length > 0 ? 'its ' + env.characteristics.join(', ') + ' character' : 'its unique character') + ' creating memories she\\'d carry forever. But the real journey had been internal. She\\'d discovered courage, curiosity, and a deep appreciation for Earth\\'s diversity. ' + dest + ' wasn\\'t just a destination anymore - it was part of who she was. The End - but truly, just the beginning.',
+                    emoji: '✨' 
+                });
+                
+                return chapters.map(page => \`
                     <div style="page-break-after: always; padding: 35px; background: white; border: 3px solid #9c27b0; border-radius: 15px; margin-bottom: 20px;">
                         <div style="background: #9c27b0; color: white; padding: 14px 28px; border-radius: 8px; display: inline-block; margin-bottom: 20px;">
-                            <strong style="font-size: 1.3em;">Chapter ${page.ch}</strong>
+                            <strong style="font-size: 1.3em;">Chapter \${page.ch}</strong>
                         </div>
-                        <h3 style="color: #9c27b0; margin: 15px 0; font-size: 1.6em;">${page.title}</h3>
-                        <div style="font-size: 60px; text-align: center; margin: 20px 0;">${page.emoji}</div>
-                        <p style="font-size: 1.2em; line-height: 1.9; color: #333; text-align: justify; text-indent: 40px;">${page.text}</p>
+                        <h3 style="color: #9c27b0; margin: 15px 0; font-size: 1.6em;">\${page.title}</h3>
+                        <div style="font-size: 60px; text-align: center; margin: 20px 0;">\${page.emoji}</div>
+                        <p style="font-size: 1.2em; line-height: 1.9; color: #333; text-align: justify; text-indent: 40px;">\${page.text}</p>
                     </div>
-                `).join('') + '<div style="margin-top: 30px; padding: 25px; background: #f3e5f5; border-radius: 10px; text-align: center;"><h3 style="color: #9c27b0; margin: 0 0 10px 0;">🎉 Congratulations! 🎉</h3><p style="font-size: 1.2em; margin: 0;">You completed an advanced chapter book! You\'re an amazing reader!</p></div>';
+                \`).join('') + '<div style="margin-top: 30px; padding: 25px; background: #f3e5f5; border-radius: 10px; text-align: center;"><h3 style="color: #9c27b0; margin: 0 0 10px 0;">🎉 Congratulations! 🎉</h3><p style="font-size: 1.2em; margin: 0;">You completed Sophia\\'s transformative journey to ' + dest + '! You\\'re an amazing reader!</p></div>';
+            }
+                
+                const historicalDetail = content.history && content.history.length > 0 
+                    ? content.history[0]
+                    : null;
+                
+                const naturalFeature = content.nature && content.nature.length > 0 
+                    ? content.nature[0] 
+                    : null;
+                
+                const activity = content.activities && content.activities.length > 0 
+                    ? content.activities[0].toLowerCase() 
+                    : 'exploring';
+                
+                // Rich, character-driven narrative with location details naturally integrated
+                const chapters = [];
+                
+                chapters.push({ 
+                    ch: 1, title: 'An Unexpected Journey', 
+                    text: 'Sophia had always loved reading about faraway places, but she\\'d never imagined she would actually visit ' + dest + '. When her parents surprised her with the trip, she could hardly believe it. That night, she researched everything she could find. The more she learned, the more excited she became. This wasn\\'t just a vacation - it was going to be an adventure.',
+                    emoji: '🌟' 
+                });
+                
+                chapters.push({ 
+                    ch: 2, title: 'First Impressions', 
+                    text: 'The moment Sophia arrived at ' + dest + ', she felt both overwhelmed and thrilled. ' + (historicalDetail || 'The place had a rich history that seemed to echo in every corner.') + ' Walking through, Sophia tried to imagine all the people who had been here before her. This place had stories to tell.',
+                    emoji: '🎭' 
+                });
+                
+                // Trip-type specific deep narrative
+                if (type === 'city') {
+                    chapters.push({ 
+                        ch: 3, title: 'The Heart of the City', 
+                        text: specialPlace 
+                            ? 'Sophia\\'s breath caught when she first saw ' + specialPlace + '. Standing before it, she understood why people traveled from all over the world to see it. She sat on a nearby bench, sketching it in her journal, trying to capture not just how it looked, but how it made her feel - small yet connected to something greater.'
+                            : 'Walking through the heart of ' + dest + ', Sophia felt the pulse of the city. Each street had its own personality. She discovered hidden cafes, street musicians, and local artisans. This wasn\\'t the ' + dest + ' she\\'d seen in guidebooks - this was the real, living city.',
+                        emoji: '🏛️' 
+                    });
+                    chapters.push({ 
+                        ch: 4, title: 'A Chance Encounter', 
+                        text: 'In a small bookshop, Sophia met an elderly woman who had lived in ' + dest + ' her whole life. They talked for over an hour about the city\\'s secrets, its changes, and its timeless beauty. The woman shared stories her grandmother had told her. Sophia realized that places aren\\'t just buildings and streets - they\\'re the people and their memories too.',
+                        emoji: '📚' 
+                    });
+                } else if (type === 'beach') {
+                    chapters.push({ 
+                        ch: 3, title: 'The Call of the Ocean', 
+                        text: (naturalFeature ? naturalFeature + ' ' : '') + 'Sophia walked along the shore of ' + dest + ' beach, her footprints disappearing behind her with each wave. ' + (specialPlace ? 'She could see ' + specialPlace + ' in the distance, a testament to nature\\'s power and beauty.' : 'The rhythmic sound of waves created a peaceful soundtrack.') + ' Here, she could think clearly.',
+                        emoji: '🌊' 
+                    });
+                    chapters.push({ 
+                        ch: 4, title: 'Lessons from the Tide', 
+                        text: 'Sophia joined a marine biology student collecting samples at the tide pools. She learned about the delicate ecosystem that thrived where land met sea. Each tiny creature had a purpose. As they worked, the student explained how beaches like ' + dest + ' were important for both wildlife and for understanding our planet. Sophia felt honored to witness it.',
+                        emoji: '🐚' 
+                    });
+                } else if (type === 'mountains') {
+                    chapters.push({ 
+                        ch: 3, title: 'Above the Clouds', 
+                        text: (naturalFeature ? naturalFeature + ' ' : '') + 'Sophia climbed steadily up the mountain trail at ' + dest + '. ' + (specialPlace ? 'Her goal was to reach ' + specialPlace + ', something she\\'d dreamed about for months.' : 'Each step brought her higher, the air growing thinner and crisper.') + ' When she finally reached the summit, the view took her breath away. The world stretched endlessly below.',
+                        emoji: '⛰️' 
+                    });
+                    chapters.push({ 
+                        ch: 4, title: 'Wilderness Wisdom', 
+                        text: 'A park ranger explained the geology and ecology of ' + dest + '. Sophia learned how these mountains formed over millions of years, how the ecosystem adapted to harsh conditions, and why protecting these wild places mattered. She felt humbled by nature\\'s patience and power. Some things were bigger than any one person.',
+                        emoji: '🌲' 
+                    });
+                }
+                
+                chapters.push({ 
+                    ch: 5, title: 'Stepping Outside Comfort', 
+                    text: 'Sophia decided to try ' + activity + ', something that scared her a little. Her hands trembled as she began, but she refused to give up. Slowly, her confidence grew. When she finished, she felt triumphant - not because it was easy, but because she\\'d pushed past her fears. ' + dest + ' was teaching her that growth happens outside your comfort zone.',
+                    emoji: '💪' 
+                });
+                
+                chapters.push({ 
+                    ch: 6, title: 'Connections Across Cultures', 
+                    text: 'That evening, Sophia shared a meal with travelers from three different countries. Despite speaking different languages and coming from different backgrounds, they found common ground in their love of exploration. They exchanged stories and contact information. Sophia realized that travel didn\\'t just show you new places - it helped you see humanity\\'s shared hopes and dreams.',
+                    emoji: '🌍' 
+                });
+                
+                chapters.push({ 
+                    ch: 7, title: 'Transformed', 
+                    text: 'As Sophia prepared to leave ' + dest + ', she reflected on how much she\\'d changed in just a few days. She\\'d been challenged, inspired, and transformed. The places she\\'d seen were incredible, but the real journey had been internal. She\\'d discovered courage she didn\\'t know she had and learned that the world was both vast and intimate. ' + dest + ' would always hold a special place in her heart, not just as a destination, but as the place where she truly found herself. The End - but really, just the beginning.',
+                    emoji: '✨' 
+                });
+                
+                return chapters.map(page => \`
+                    <div style="page-break-after: always; padding: 35px; background: white; border: 3px solid #9c27b0; border-radius: 15px; margin-bottom: 20px;">
+                        <div style="background: #9c27b0; color: white; padding: 14px 28px; border-radius: 8px; display: inline-block; margin-bottom: 20px;">
+                            <strong style="font-size: 1.3em;">Chapter \${page.ch}</strong>
+                        </div>
+                        <h3 style="color: #9c27b0; margin: 15px 0; font-size: 1.6em;">\${page.title}</h3>
+                        <div style="font-size: 60px; text-align: center; margin: 20px 0;">\${page.emoji}</div>
+                        <p style="font-size: 1.2em; line-height: 1.9; color: #333; text-align: justify; text-indent: 40px;">\${page.text}</p>
+                    </div>
+                \`).join('') + '<div style="margin-top: 30px; padding: 25px; background: #f3e5f5; border-radius: 10px; text-align: center;"><h3 style="color: #9c27b0; margin: 0 0 10px 0;">🎉 Congratulations! 🎉</h3><p style="font-size: 1.2em; margin: 0;">You completed Sophia\\'s transformative journey to ' + dest + '! You\\'re an amazing reader!</p></div>';
             }
             </script>
         `;
     },
     
-    generateSearchFind(destination, tripType) {
+    generateSearchFind(destination) {
         const items = {
             city: ['🏢 Building', '🚕 Taxi', '🚦 Traffic Light', '🌳 Tree', '👮 Police Officer'],
             beach: ['🐚 Seashell', '⭐ Starfish', '🦀 Crab', '🏖️ Beach Ball', '☀️ Sun'],
@@ -259,7 +795,8 @@ const GameGenerators = {
             international: ['✈️ Airplane', '🗼 Tower', '🏛️ Monument', '🍜 Food', '🎭 Culture']
         };
         
-        const searchItems = items[tripType] || items.city;
+        // Use generic city items as default
+        const searchItems = items.city;
         
         return `
             <div class="search-find-container">
@@ -276,13 +813,13 @@ const GameGenerators = {
         `;
     },
     
-    generateColoringPage(destination, tripType) {
+    generateColoringPage(destination) {
         return `
             <div class="coloring-page">
                 <h3>Color Your ${destination} Adventure!</h3>
                 <div class="coloring-outline">
                     <div style="font-size: 120px; text-align: center; filter: grayscale(100%) opacity(30%);">
-                        ${tripType === 'beach' ? '🏖️' : tripType === 'mountains' ? '🏔️' : tripType === 'theme-park' ? '🎢' : '🏙️'}
+                        🏙️
                     </div>
                     <p style="margin-top: 20px; font-size: 1.2em; text-align: center; color: #999;">
                         ${destination.toUpperCase()}
@@ -300,7 +837,7 @@ const GameGenerators = {
         `;
     },
     
-    generateCountingGame(destination, tripType) {
+    generateCountingGame(destination) {
         const objects = {
             city: '🏢',
             beach: '🐚',
@@ -310,7 +847,8 @@ const GameGenerators = {
             international: '✈️'
         };
         
-        const obj = objects[tripType] || '⭐';
+        // Use star as generic default
+        const obj = '⭐';
         
         return `
             <div style="padding: 20px;">
@@ -348,7 +886,7 @@ const GameGenerators = {
     },
     
     // Ages 4-8 Games
-    generateBingo(destination, tripType) {
+    generateBingo(destination) {
         const itemSets = {
             city: [
                 'Tall Building', 'Red Car', 'Traffic Light', 'Park', 'Restaurant',
@@ -394,7 +932,8 @@ const GameGenerators = {
             ]
         };
         
-        const items = itemSets[tripType] || itemSets.city;
+        // Use generic city items as default
+        const items = itemSets.city;
         const shuffled = items.sort(() => Math.random() - 0.5).slice(0, 24);
         shuffled.splice(12, 0, 'FREE SPACE');
         
@@ -415,7 +954,7 @@ const GameGenerators = {
         `;
     },
     
-    generateGuessIn10(destination, tripType) {
+    generateGuessIn10(destination) {
         const riddleSets = {
             city: [
                 { q: 'I light up at night and help you cross the street safely. What am I?', a: 'Traffic Light' },
@@ -440,7 +979,8 @@ const GameGenerators = {
             ]
         };
         
-        const riddles = riddleSets[tripType] || riddleSets.city;
+        // Use generic city riddles as default
+        const riddles = riddleSets.city;
         
         return `
             <div style="padding: 20px;">
@@ -459,7 +999,7 @@ const GameGenerators = {
         `;
     },
     
-    generatePictionary(destination, tripType) {
+    generatePictionary(destination) {
         const wordSets = {
             city: ['Skyscraper', 'Taxi', 'Subway', 'Park', 'Restaurant', 'Museum', 'Traffic Jam', 'Street Performer', 'Coffee Shop', 'Fire Truck', 'Statue', 'Bridge', 'Fountain', 'Sidewalk', 'Billboard'],
             beach: ['Sandcastle', 'Surfboard', 'Seashell', 'Waves', 'Seagull', 'Beach Ball', 'Sunscreen', 'Pier', 'Lifeguard', 'Palm Tree', 'Flip Flops', 'Sand Bucket', 'Volleyball', 'Sailboat', 'Starfish'],
@@ -467,7 +1007,8 @@ const GameGenerators = {
             'theme-park': ['Roller Coaster', 'Carousel', 'Cotton Candy', 'Ferris Wheel', 'Mascot', 'Popcorn', 'Ticket', 'Fireworks', 'Parade', 'Balloon', 'Ice Cream', 'Game Booth', 'Face Paint', 'Souvenir', 'Map']
         };
         
-        const words = wordSets[tripType] || wordSets.city;
+        // Use generic city words as default
+        const words = wordSets.city;
         
         return `
             <div style="padding: 20px;">
@@ -879,7 +1420,7 @@ const GameGenerators = {
     },
     
     // Ages 9-12 Games
-    generateScavengerHunt(destination, tripType) {
+    generateScavengerHunt(destination) {
         const challenges = {
             city: [
                 '📸 A building reflection in a window',
@@ -917,7 +1458,8 @@ const GameGenerators = {
             ]
         };
         
-        const items = challenges[tripType] || challenges.city;
+        // Use generic city challenges as default
+        const items = challenges.city;
         
         return `
             <div style="padding: 20px;">
@@ -939,7 +1481,7 @@ const GameGenerators = {
         `;
     },
     
-    generateCrossword(destination, tripType) {
+    generateCrossword(destination) {
         return `
             <div style="padding: 20px;">
                 <h3 style="text-align: center; margin-bottom: 30px;">${destination} Crossword Puzzle</h3>
@@ -973,7 +1515,7 @@ const GameGenerators = {
         `;
     },
     
-    generateTrivia(destination, tripType) {
+    generateTrivia(destination) {
         return `
             <div style="padding: 20px;">
                 <h3 style="text-align: center; margin-bottom: 30px;">${destination} Trivia Challenge! 🧠</h3>
@@ -1119,7 +1661,7 @@ const GameGenerators = {
     },
     
     // Ages 13+ Games
-    generatePhotoChallenge(destination, tripType) {
+    generatePhotoChallenge(destination) {
         const challenges = [
             '📷 Golden hour shot (sunrise or sunset)',
             '📷 Black and white street photography',

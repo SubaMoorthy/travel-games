@@ -2,7 +2,6 @@
 const app = {
     destination: '',
     ageGroup: '',
-    tripType: '',
     
     init() {
         this.setupEventListeners();
@@ -17,7 +16,6 @@ const app = {
     showGameSelection() {
         this.destination = document.getElementById('destination').value.trim();
         this.ageGroup = document.getElementById('ageGroup').value;
-        this.tripType = document.getElementById('tripType').value;
         
         if (!this.destination || !this.ageGroup) {
             alert('Please select an age group and enter a destination!');
@@ -91,10 +89,9 @@ const app = {
         return gamesByAge[age] || [];
     },
     
-    generateGame(gameId) {
+    async generateGame(gameId) {
         console.log('generateGame called with:', gameId);
         console.log('Current destination:', this.destination);
-        console.log('Current tripType:', this.tripType);
         
         const gameTitle = document.getElementById('gameTitle');
         const gameContent = document.getElementById('gameContent');
@@ -108,34 +105,49 @@ const app = {
         let content = '';
         let title = '';
         
+        // Show loading state for async generators
+        const isAsync = ['story-book', 'reading-story-book'].includes(gameId);
+        if (isAsync) {
+            gameContent.innerHTML = `
+                <div style="padding: 40px; text-align: center;">
+                    <div style="font-size: 60px; margin-bottom: 20px;">📚</div>
+                    <h3>Creating your personalized ${this.destination} story...</h3>
+                    <p style="margin-top: 20px; color: #666;">Analyzing ${this.destination} and fetching interesting facts from Wikipedia and NPS...</p>
+                    <div style="margin-top: 20px; font-size: 30px;">⏳</div>
+                </div>
+            `;
+            gameOutput.classList.remove('hidden');
+            gameTitle.textContent = 'Loading...';
+        }
+        
         switch(gameId) {
             case 'bingo':
                 title = `${this.destination} Travel Bingo`;
-                content = GameGenerators.generateBingo(this.destination, this.tripType);
+                content = GameGenerators.generateBingo(this.destination);
                 break;
             case 'story-book':
                 title = `My Trip to ${this.destination}`;
-                content = GameGenerators.generateStoryBook(this.destination, this.tripType);
+                content = await GameGenerators.generateStoryBook(this.destination);
                 break;
             case 'search-find':
                 title = `Search & Find: ${this.destination}`;
-                content = GameGenerators.generateSearchFind(this.destination, this.tripType);
+                content = GameGenerators.generateSearchFind(this.destination);
                 break;
             case 'coloring':
                 title = `Color ${this.destination}`;
-                content = GameGenerators.generateColoringPage(this.destination, this.tripType);
+                content = GameGenerators.generateColoringPage(this.destination);
                 break;
             case 'counting':
                 title = `Count at ${this.destination}`;
-                content = GameGenerators.generateCountingGame(this.destination, this.tripType);
+                content = GameGenerators.generateCountingGame(this.destination);
                 break;
             case 'guess-in-10':
                 title = 'Guess in 10 Questions';
-                content = GameGenerators.generateGuessIn10(this.destination, this.tripType);
+                content = GameGenerators.generateGuessIn10(this.destination);
                 break;
             case 'pictionary':
                 title = `${this.destination} Pictionary`;
-                content = GameGenerators.generatePictionary(this.destination, this.tripType);
+                content = GameGenerators.generatePictionary(this.destination);
                 break;
             case 'comic-creation':
                 title = 'Create Your Travel Comic';
@@ -143,7 +155,7 @@ const app = {
                 break;
             case 'reading-story-book':
                 title = `${this.destination} Reading Adventure`;
-                content = GameGenerators.generateReadingStoryBook(this.destination, this.tripType);
+                content = await GameGenerators.generateReadingStoryBook(this.destination);
                 break;
             case 'itinerary':
                 title = `My ${this.destination} Adventure`;
@@ -159,15 +171,15 @@ const app = {
                 break;
             case 'scavenger-hunt':
                 title = `${this.destination} Photo Scavenger Hunt`;
-                content = GameGenerators.generateScavengerHunt(this.destination, this.tripType);
+                content = GameGenerators.generateScavengerHunt(this.destination);
                 break;
             case 'crossword':
                 title = `${this.destination} Crossword`;
-                content = GameGenerators.generateCrossword(this.destination, this.tripType);
+                content = GameGenerators.generateCrossword(this.destination);
                 break;
             case 'trivia':
                 title = `${this.destination} Trivia`;
-                content = GameGenerators.generateTrivia(this.destination, this.tripType);
+                content = GameGenerators.generateTrivia(this.destination);
                 break;
             case 'mad-libs':
                 title = 'Travel Mad Libs';
@@ -183,7 +195,7 @@ const app = {
                 break;
             case 'photo-challenge':
                 title = `${this.destination} Photo Challenge`;
-                content = GameGenerators.generatePhotoChallenge(this.destination, this.tripType);
+                content = GameGenerators.generatePhotoChallenge(this.destination);
                 break;
             case 'budget-game':
                 title = 'Budget Your Day';
